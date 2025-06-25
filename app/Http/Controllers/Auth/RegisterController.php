@@ -15,12 +15,14 @@ use Illuminate\Support\Facades\DB;
 class RegisterController extends Controller
 {
 
-    public function create()
+    public function getRegister()
     {
         return view('auth.register');
     }
     // protected $redirectTo = '/register';
-    public function store(RegisterUserRequest $request)
+
+
+    public function postRegister(RegisterUserRequest $request)
     {
         try {
             DB::transaction(function () use ($request) {

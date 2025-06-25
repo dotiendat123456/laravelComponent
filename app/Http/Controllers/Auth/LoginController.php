@@ -11,17 +11,12 @@ use App\Enums\UserStatus;
 
 class LoginController extends Controller
 {
-    public function create()
+    public function getLogin()
     {
         return view('auth.login');
     }
-    // public function __construct()
-    // {
-    //     $this->middleware('guest')->except('logout');
-    // }
 
-
-    public function store(LoginUserRequest $request)
+    public function postLogin(LoginUserRequest $request)
     {
         $credentials = $request->only('email', 'password');
 
@@ -36,7 +31,7 @@ class LoginController extends Controller
     }
 
 
-    public function destroy(Request $request)
+    public function logout(Request $request)
     {
         Auth::logout();
 

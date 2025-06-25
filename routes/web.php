@@ -11,8 +11,8 @@ use App\Http\Controllers\PostController;
 
 
 // Trang mặc định
-Route::get('/', fn() => view('welcome'));
-Route::get('/home', [HomeController::class, 'index'])->name('home');
+// Route::get('/', fn() => view('welcome'));
+// Route::get('/home', [HomeController::class, 'index'])->name('home');
 
 
 // Sau khi đăng nhập (auth + kiểm tra trạng thái)
@@ -21,9 +21,8 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::get('/home', [HomeController::class, 'index'])->name('home');
     // Logout vẫn cho phép truy cập
-    Route::get('/logout', [LoginController::class, 'destroy'])->name('logout');
-    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
-
+    Route::get('/logout', [LoginController::class, 'logout'])->name('logout');
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
     Route::get('/profile', [ProfileController::class, 'showProfileForm'])->name('profile.edit');
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -32,11 +31,12 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
 
 // Chỉ cho khách truy cập được login/register
 Route::middleware('guest')->group(function () {
-    Route::get('/register', [RegisterController::class, 'create'])->name('register');
-    Route::post('/register', [RegisterController::class, 'store']);
+    Route::get('/register', [RegisterController::class, 'getRegister'])->name('register');
+    Route::post('/register', [RegisterController::class, 'postRegister']);
 
-    Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store']);
+    Route::get('/', [LoginController::class, 'getLogin']);
+    Route::get('/login', [LoginController::class, 'getLogin'])->name('login');
+    Route::post('/login', [LoginController::class, 'postLogin']);
 
     Route::prefix('passwords')->group(function () {
         // Gửi form nhập email
