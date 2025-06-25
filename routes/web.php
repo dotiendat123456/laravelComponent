@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PostController;
 
 
@@ -22,6 +23,10 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     // Logout vẫn cho phép truy cập
     Route::get('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+
+    Route::get('/profile', [ProfileController::class, 'showProfileForm'])->name('profile.edit');
+    Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
 });
 
 
