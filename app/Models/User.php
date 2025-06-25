@@ -18,12 +18,19 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
+    // protected $fillable = [
+    //     'name',
+    //     'email',
+    //     'password',
+    // ];
     protected $fillable = [
         'first_name',
         'last_name',
         'email',
         'password',
         'status',
+        'role',
+        'address',
     ];
 
     /**
@@ -33,7 +40,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
-        'remember_token',
+        // 'remember_token',
     ];
 
     /**
@@ -48,11 +55,13 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    protected $casts = [
-        'status' => UserStatus::class,
-    ];
+
     public function getNameAttribute()
     {
         return "{$this->first_name} {$this->last_name}";
     }
+
+    protected $casts = [
+        'status' => UserStatus::class,
+    ];
 }

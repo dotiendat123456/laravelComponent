@@ -2,34 +2,46 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\RegisterUserRequest;
+use Illuminate\Http\Request;
 use App\Models\User;
+use App\Enums\UserStatus;
+use App\Http\Requests\RegisterUserRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use App\Enums\UserStatus;
+use App\Jobs\SendWelcomeEmail;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Auth\RegistersUsers;
 
 class RegisterController extends Controller
 {
+
     public function create()
     {
         return view('auth.register');
     }
-
+    // protected $redirectTo = '/register';
     public function store(RegisterUserRequest $request)
     {
-        $user = User::create([
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'status' => UserStatus::Pending->value,
-        ]);
+        try {
+            DB::transaction(function () use ($request) {
+                // Tạo user
+                $user = User::create([
+                    'first_name' => $request->first_name,
+                    'last_name'  => $request->last_name,
+                    'email'      => $request->email,
+                    'password'   => $request->password, // đã được hash auto nếu dùng 'hashed' cast
+                    'status'     => UserStatus::PENDING,
+                    'role'       => UserRole::USER,
+                ]);
 
-        Mail::raw('Cảm ơn bạn đã đăng ký.', function ($message) use ($user) {
-            $message->to($user->email)->subject('Chào bạn!');
-        });
+                SendWelcomeEmail::dispatch($user);
+            });
 
-        return redirect()->route('login')->with('success', 'Đăng ký tài khoản thành công');
+            return to_route('login')->with('success', 'Đăng ký tài khoản thành công');
+        } catch (\Exception $e) {
+            return back()->withErrors(['register_error' => 'Đăng ký thất bại: ' . $e->getMessage()]);
+        }
     }
 }
