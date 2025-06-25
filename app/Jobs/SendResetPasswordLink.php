@@ -28,8 +28,7 @@ class SendResetPasswordLink implements ShouldQueue
 
     public function handle()
     {
-        // Hoặc Mail::to($this->user->email)->send(new ResetPasswordMail(...))
-        // Tùy bạn, đây là ví dụ đơn giản gửi link qua Mail::raw
+
         $link = url(route('passwords.reset', [
             'token' => $this->token,
             'email' => $this->user->email,

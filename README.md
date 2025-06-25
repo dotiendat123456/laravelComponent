@@ -1,10 +1,13 @@
-omposer install
+Composer install
 
 cp .env.example .env
 
 php artisan key:generate
 
-Cấu hính file .env: DB_CONNECTION=mysql # DB_HOST=127.0.0.1 # DB_PORT=3306 # DB_DATABASE=laravel1 # DB_USERNAME=root # DB_PASSWORD=
+Cấu hính file .env:
+APP_URL=http://localhost:8000 //// đường dẫn app để chạy dự án 
+
+DB_CONNECTION=mysql # DB_HOST=127.0.0.1 # DB_PORT=3306 # DB_DATABASE=laravel1 # DB_USERNAME=root # DB_PASSWORD=
 
 MAIL_MAILER=smtp
 MAIL_HOST=sandbox.smtp.mailtrap.io
