@@ -25,23 +25,6 @@ class LoginController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        // $user = User::where('email', $credentials['email'])->first();
-
-        // if ($user) {
-        //     if ($user->status === UserStatus::Locked) {
-        //         return back()->withErrors(['email' => 'Tài khoản của bạn đã bị khóa.']);
-        //     }
-
-        //     if ($user->status === UserStatus::Pending) {
-        //         return back()->withErrors(['email' => 'Tài khoản của bạn đang chờ phê duyệt.']);
-        //     }
-
-        //     if ($user->status === UserStatus::Rejected) {
-        //         return back()->withErrors(['email' => 'Tài khoản của bạn đã bị từ chối.']);
-        //     }
-        // }
-
-
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             return to_route('posts.index')->with('success', 'Đăng nhập thành công');

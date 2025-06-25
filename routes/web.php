@@ -4,20 +4,14 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\PostController;
+
 
 // Trang mặc định
 Route::get('/', fn() => view('welcome'));
 Route::get('/home', [HomeController::class, 'index'])->name('home');
-
-// Chỉ cho khách truy cập được login/register
-Route::middleware('guest')->group(function () {
-    Route::get('/register', [RegisterController::class, 'create'])->name('register');
-    Route::post('/register', [RegisterController::class, 'store']);
-
-    Route::get('/login', [LoginController::class, 'create'])->name('login');
-    Route::post('/login', [LoginController::class, 'store']);
-});
 
 
 // Sau khi đăng nhập (auth + kiểm tra trạng thái)
@@ -28,4 +22,26 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     // Logout vẫn cho phép truy cập
     Route::get('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+});
+
+
+// Chỉ cho khách truy cập được login/register
+Route::middleware('guest')->group(function () {
+    Route::get('/register', [RegisterController::class, 'create'])->name('register');
+    Route::post('/register', [RegisterController::class, 'store']);
+
+    Route::get('/login', [LoginController::class, 'create'])->name('login');
+    Route::post('/login', [LoginController::class, 'store']);
+
+    Route::prefix('passwords')->group(function () {
+        // Gửi form nhập email
+        Route::get('reset', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('passwords.request');
+        // Submit email để gửi link đặt lại mật khẩu
+        Route::post('email', [ForgotPasswordController::class, 'sendResetLinkEmail'])->name('passwords.email');
+
+        // Giao diện nhập mật khẩu mới (sau khi click link trong email)
+        Route::get('reset/{token}', [ResetPasswordController::class, 'showResetForm'])->name('passwords.reset');
+        // Submit mật khẩu mới
+        Route::post('reset', [ResetPasswordController::class, 'reset'])->name('passwords.update');
+    });
 });

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Auth;
 
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
 use App\Enums\UserStatus;
 use App\Http\Requests\RegisterUserRequest;
@@ -12,7 +11,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Jobs\SendWelcomeEmail;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Foundation\Auth\RegistersUsers;
 
 class RegisterController extends Controller
 {
@@ -36,7 +34,7 @@ class RegisterController extends Controller
                     'role'       => UserRole::USER,
                 ]);
 
-                SendWelcomeEmail::dispatch($user);
+                // SendWelcomeEmail::dispatch($user);
             });
 
             return to_route('login')->with('success', 'Đăng ký tài khoản thành công');
