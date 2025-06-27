@@ -24,11 +24,11 @@ return new class extends Migration
             $table->id();
             $table->string('first_name')->nullable();;
             $table->string('last_name')->nullable();;
-            $table->string('email')->unique();
+            $table->string('email')->nullable();;
             $table->string('password')->nullable();;
             $table->string('address')->nullable();
             $table->tinyInteger('status')->default(0); // 0: chưa kích hoạt
-            $table->enum('role', ['admin', 'user'])->default('user');
+            $table->string('role')->default('user'); // admin hoặc user           
             $table->timestamps();
         });
 

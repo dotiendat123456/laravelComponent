@@ -6,6 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use App\Models\User;
 
 class AdminUserSeeder extends Seeder
 {
@@ -14,19 +15,14 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('users')->updateOrInsert(
-            ['email' => 'superadmin@khgc.com'],
-            [
-                'first_name' => 'Admin',
-                'last_name' => 'Super',
-                'email' => 'superadmin@khgc.com',
-                'password' => Hash::make('Abcd@1234'),
-                'address' => 'Admin Address',
-                'status' => 1,
-                'role' => 'admin',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]
-        );
+        User::create([
+            'first_name' => 'Admin',
+            'last_name' => 'Super',
+            'email' => 'superadmin@khgc.com',
+            'password' => Hash::make('Abcd@1234'),
+            'address' => 'Admin Address',
+            'status' => 1,
+            'role' => 'admin',
+        ]);
     }
 }

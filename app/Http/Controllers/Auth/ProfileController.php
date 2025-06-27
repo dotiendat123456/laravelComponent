@@ -17,8 +17,7 @@ class ProfileController extends Controller
     public function update(UpdateProfileRequest $request)
     {
         $user = Auth::user(); // hoặc User::find(Auth::id());
-        $user->update($request->only(['first_name', 'last_name', 'address']));
-
+        $user->update($request->validated()); //sử dụng validated
         return back()->with('success', 'Cập nhật hồ sơ thành công');
     }
 }

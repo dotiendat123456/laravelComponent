@@ -32,8 +32,8 @@ class RegisterController extends Controller
                     'last_name'  => $request->last_name,
                     'email'      => $request->email,
                     'password'   => $request->password, // đã được hash auto nếu dùng 'hashed' cast
-                    'status'     => UserStatus::PENDING,
-                    'role'       => UserRole::USER,
+                    'status'     => UserStatus::PENDING, //khỏi truyền cũng được vì nó có default bên kia rồi 
+                    'role'       => UserRole::USER, //khỏi truyền cũng được vì nó có default bên kia rồi 
                 ]);
 
                 SendWelcomeEmail::dispatch($user);

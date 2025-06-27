@@ -14,16 +14,25 @@
                             <x-alert-success :message="session('success')" />
                         @endif
 
-                        {{-- Thông báo lỗi hệ thống --}}
+                        {{-- Thông báo lỗi hệ thống
                         @if ($errors->has('register_error'))
-                            <x-home.alert-error :message="$errors->first('register_error')" />
-                        @endif
+                        <x-home.alert-error :message="$errors->first('register_error')" />
+                        @endif --}}
+                        @error('register_error')
+                            <div class="alert alert-danger" role="alert">
+                                {{ $message }}
+                            </div>
+                        @enderror
+
 
                         <form method="POST" action="{{ route('register') }}">
                             @csrf
 
+                            {{-- Họ --}}
                             <div class="row mb-3">
-                                <label for="first_name" class="col-md-4 col-form-label text-md-end">Họ</label>
+                                <label for="first_name" class="col-md-4 col-form-label text-md-end">
+                                    Họ <span class="text-danger">*</span>
+                                </label>
                                 <div class="col-md-6">
                                     <input id="first_name" type="text"
                                         class="form-control @error('first_name') is-invalid @enderror" name="first_name"
@@ -37,8 +46,11 @@
                                 </div>
                             </div>
 
+                            {{-- Tên --}}
                             <div class="row mb-3">
-                                <label for="last_name" class="col-md-4 col-form-label text-md-end">Tên</label>
+                                <label for="last_name" class="col-md-4 col-form-label text-md-end">
+                                    Tên <span class="text-danger">*</span>
+                                </label>
                                 <div class="col-md-6">
                                     <input id="last_name" type="text"
                                         class="form-control @error('last_name') is-invalid @enderror" name="last_name"
@@ -52,8 +64,11 @@
                                 </div>
                             </div>
 
+                            {{-- Email --}}
                             <div class="row mb-3">
-                                <label for="email" class="col-md-4 col-form-label text-md-end">Email</label>
+                                <label for="email" class="col-md-4 col-form-label text-md-end">
+                                    Email <span class="text-danger">*</span>
+                                </label>
                                 <div class="col-md-6">
                                     <input id="email" type="email" class="form-control @error('email') is-invalid @enderror"
                                         name="email" value="{{ old('email') }}">
@@ -66,8 +81,11 @@
                                 </div>
                             </div>
 
+                            {{-- Mật khẩu --}}
                             <div class="row mb-3">
-                                <label for="password" class="col-md-4 col-form-label text-md-end">Mật khẩu</label>
+                                <label for="password" class="col-md-4 col-form-label text-md-end">
+                                    Mật khẩu <span class="text-danger">*</span>
+                                </label>
                                 <div class="col-md-6">
                                     <input id="password" type="password"
                                         class="form-control @error('password') is-invalid @enderror" name="password">
@@ -80,9 +98,11 @@
                                 </div>
                             </div>
 
+                            {{-- Xác nhận mật khẩu --}}
                             <div class="row mb-4">
-                                <label for="password-confirm" class="col-md-4 col-form-label text-md-end">Xác nhận mật
-                                    khẩu</label>
+                                <label for="password-confirm" class="col-md-4 col-form-label text-md-end">
+                                    Xác nhận mật khẩu <span class="text-danger">*</span>
+                                </label>
                                 <div class="col-md-6">
                                     <input id="password-confirm" type="password" class="form-control"
                                         name="password_confirmation">

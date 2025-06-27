@@ -20,13 +20,16 @@ class LoginController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
+        // Chỉ cho đăng nhập nếu status = APPROVED
+        $credentials['status'] = UserStatus::APPROVED;
+
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
             return to_route('posts.index')->with('success', 'Đăng nhập thành công');
         }
 
         return back()->withErrors([
-            'account_status' => 'Email hoặc mật khẩu không đúng.',
+            'account_status' => 'Email hoặc mật khẩu không đúng hoặc tài khoản của bạn có thể đang chờ phê duyệt, bị từ chối, bị khóa.',
         ])->onlyInput('email');
     }
 

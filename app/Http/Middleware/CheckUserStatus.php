@@ -11,12 +11,10 @@ class CheckUserStatus
 {
     public function handle(Request $request, Closure $next)
     {
-        // Trả về đối tượng người dùng (User model) đang đăng nhập hiện tại.
         $user = Auth::user();
 
-        if (!$user) return $next($request);
+        if (!$user) return $next($request); // Bỏ qua nếu chưa đăng nhập
 
-        // Dùng enum để kiểm tra trạng thái tài khoản
         switch ($user->status) {
             case UserStatus::LOCKED:
                 Auth::logout();
@@ -37,14 +35,13 @@ class CheckUserStatus
                 ]);
 
             case UserStatus::APPROVED:
-                // Cho phép tiếp tục
-                return $next($request);
-        }
+                return $next($request); // OK, cho đi tiếp
 
-        // Phòng trường hợp không đúng enum
-        Auth::logout();
-        return to_route('login')->withErrors([
-            'account_status' => 'Tài khoản không hợp lệ.'
-        ]);
+            default:
+                Auth::logout();
+                return to_route('login')->withErrors([
+                    'account_status' => 'Tài khoản không hợp lệ.'
+                ]);
+        }
     }
 }
