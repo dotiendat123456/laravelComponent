@@ -64,4 +64,8 @@ class User extends Authenticatable
     protected $casts = [
         'status' => UserStatus::class,
     ];
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
 }

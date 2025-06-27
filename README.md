@@ -22,12 +22,32 @@ QUEUE_CONNECTION=sync (Để gửi mail trực tiếp với tiến trình khi g�
 
 php artisan migrate
 
+trước tiến cmt dòng $this->call([PostSeeder::class,]); trong DattabaserSeeder.php 
+
+php artisan db:seed
+
+tiếp theo tạo user có id bằng 2 
+ 
+tiếp theo mở thẻ cmt $this->call([PostSeeder::class,]); trong DattabaserSeeder.php 
+
+tiếp theo cmt dòng $this->call(AdminUserSeeder::class); 
+
 php artisan db:seed
 
 php artisan queue:work // để chạy queue tự động gửi mail php artisan queue:work --daemon
 
 // Nếu chạy dự án mà bị lỗi không gửi được mail thì tạo inbox mới trong mailtrap và cấu hình lại
 
-npm install
-npm run dev
-php artisan serve
+npm install/
+npm run dev/
+php artisan serve/
+
+
+composer require spatie/laravel-medialibrary
+
+php artisan vendor:publish --provider="Spatie\MediaLibrary\MediaLibraryServiceProvider"
+
+php artisan migrate
+
+
+php artisan storage:link

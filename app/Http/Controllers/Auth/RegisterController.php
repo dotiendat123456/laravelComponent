@@ -36,7 +36,7 @@ class RegisterController extends Controller
                     'role'       => UserRole::USER, //khỏi truyền cũng được vì nó có default bên kia rồi 
                 ]);
 
-                SendWelcomeEmail::dispatch($user);
+                // SendWelcomeEmail::dispatch($user);
             });
 
             return to_route('login')->with('success', 'Đăng ký tài khoản thành công');
