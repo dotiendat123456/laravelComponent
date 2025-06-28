@@ -8,16 +8,26 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Str;
+use App\Enums\UserRole;
 
 
 class PostController extends Controller
 {
     public function index()
     {
-        $posts = Auth::user()->posts()->latest()->paginate(5); // bạn có thể eager load quan hệ nếu cần
+        $user = Auth::user();
+
+        if ($user->isAdmin()) {
+            $posts = Post::latest()->paginate(5);
+        } else {
+            $posts = $user->posts()->latest()->paginate(5);
+        }
+
         return view('posts.index', compact('posts'));
     }
+
 
 
     public function create()
@@ -72,21 +82,62 @@ class PostController extends Controller
         //
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function edit(Post $post)
     {
-        //
+        if ($post->user_id !== Auth::id()) {
+            abort(404); // Chỉ owner mới vào được
+        }
+
+        return view('posts.edit', compact('post'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+
+
+    public function update(UpdatePostRequest $request, Post $post)
     {
-        //
+        //  Chỉ chủ bài viết được sửa
+        if ($post->user_id !== Auth::id()) {
+            abort(404);
+        }
+
+        //  Gán dữ liệu cơ bản
+        $post->title = $request->title;
+        $post->description = $request->description;
+        $post->content = $request->content;
+        $post->publish_date = $request->publish_date;
+
+        //  Nếu title đổi thì sinh slug mới, đảm bảo unique
+        if ($post->isDirty('title')) {
+            $slug = Str::slug($request->title);
+            $originalSlug = $slug;
+            $count = 1;
+            while (Post::where('slug', $slug)->where('id', '!=', $post->id)->exists()) {
+                $slug = $originalSlug . '-' . $count++;
+            }
+            $post->slug = $slug;
+        }
+
+        //  Nếu người chỉnh là Admin thì cho phép chỉnh status
+
+        if ($request->user()->isAdmin()) {
+            $post->status = $request->validated('status');
+        }
+
+
+
+        $post->save();
+
+
+        //  Thumbnail mới? → Xoá cũ & gán mới
+        if ($request->hasFile('thumbnail')) {
+            $post->clearMediaCollection('thumbnails');
+            $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
+        }
+
+        return to_route('posts.index')->with('success', 'Cập nhật bài viết thành công!');
     }
+
+
 
     /**
      * Remove the specified resource from storage.

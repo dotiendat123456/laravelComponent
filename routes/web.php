@@ -33,6 +33,11 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
     Route::delete('/posts-destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroyAll');
+
+    // Route::middleware('can.updatestatus')->patch(
+    //     '/posts/{post}/status',
+    //     [PostController::class, 'updateStatus']
+    // )->name('posts.updateStatus');
 });
 
 

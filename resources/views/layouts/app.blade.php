@@ -4,7 +4,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- FontAwesome CDN mới nhất -->
+
+    <!-- FontAwesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- CSRF Token -->
@@ -16,8 +17,11 @@
     <link rel="dns-prefetch" href="//fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=Nunito" rel="stylesheet">
 
-    <!-- Scripts -->
+    <!-- Main CSS/JS -->
     @vite(['resources/sass/app.scss', 'resources/js/app.js'])
+
+    <!-- Các style bổ sung (Editor, CSS custom, ...) -->
+    @stack('styles')
 </head>
 
 <body>
@@ -36,7 +40,7 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav me-auto">
-
+                        {{-- Bạn có thể thêm menu ở đây --}}
                     </ul>
 
                     <!-- Right Side Of Navbar -->
@@ -66,9 +70,8 @@
                                         Hồ sơ cá nhân
                                     </a>
 
-                                    <a class="dropdown-item" href="{{ route('logout') }}"
-                                        onclick="event.preventDefault();
-                                                                                     document.getElementById('logout-form').submit();">
+                                    <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();
+                                                         document.getElementById('logout-form').submit();">
                                         Đăng xuất
                                     </a>
 
@@ -87,6 +90,9 @@
             @yield('content')
         </main>
     </div>
+
+    <!-- Scripts bổ sung (Editor JS, plugin JS, ...) -->
+    @stack('scripts')
 </body>
 
 </html>

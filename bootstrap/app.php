@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use App\Http\Middleware\CheckUserStatus;
+use App\Http\Middleware\CheckUpdateStatus;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // sử dụng alias để đăng ký middleware với tên tùy chỉnh 
         $middleware->alias([
             'check.user.status' => CheckUserStatus::class,
+            'can.updatestatus' => CheckUpdateStatus::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
