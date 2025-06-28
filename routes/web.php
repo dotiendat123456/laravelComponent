@@ -62,3 +62,8 @@ Route::middleware('guest')->group(function () {
         Route::post('reset', [ResetPasswordController::class, 'reset'])->name('passwords.update');
     });
 });
+
+
+
+Route::get('/news', [PostController::class, 'publicIndex'])->name('news.index');
+Route::get('/news/{post:slug}', [PostController::class, 'publicShow'])->name('news.show');

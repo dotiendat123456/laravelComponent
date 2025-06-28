@@ -59,9 +59,11 @@
                             </td>
                             <td>
                                 <div class="d-inline-flex align-items-center gap-2">
-                                    <a href="{{ route('posts.show', $post) }}" class="btn btn-sm btn-outline-info p-1">
+                                    <a href="{{ route('news.show', $post->slug) }}" class="btn btn-sm btn-outline-info p-1"
+                                        target="_blank">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
+
                                     <a href="{{ route('posts.edit', $post) }}" class="btn btn-sm btn-outline-warning p-1">
                                         <i class="fa-solid fa-edit"></i>
                                     </a>

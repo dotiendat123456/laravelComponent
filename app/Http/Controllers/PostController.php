@@ -81,6 +81,26 @@ class PostController extends Controller
     {
         //
     }
+
+    public function publicIndex()
+    {
+        $posts = Post::where('status', 1)
+            ->latest('publish_date')
+            ->paginate(10);
+
+        return view('news.index', compact('posts'));
+    }
+
+    public function publicShow(Post $post)
+    {
+        if ($post->status != 1) {
+            abort(404);
+        }
+
+        return view('news.show', compact('post'));
+    }
+
+
     public function edit(Post $post)
     {
         $user = Auth::user();

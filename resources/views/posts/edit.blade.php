@@ -89,7 +89,7 @@
                     <label for="status" class="form-label">Trạng thái</label>
                     <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
                         <option value="0" {{ old('status', $post->status) == 0 ? 'selected' : '' }}>Bài viết mới</option>
-                        <option value="1" {{ old('status', $post->status) == 1 ? 'selected' : '' }}>Đã cập nhật</option>
+                        <option value="1" {{ old('status', $post->status) == 1 ? 'selected' : '' }}>Đã phê duyệt</option>
                         <option value="2" {{ old('status', $post->status) == 2 ? 'selected' : '' }}>Khác</option>
                     </select>
                     @error('status')
