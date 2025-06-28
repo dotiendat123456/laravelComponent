@@ -81,11 +81,12 @@ class PostController extends Controller
     {
         //
     }
-
     public function edit(Post $post)
     {
-        if ($post->user_id !== Auth::id()) {
-            abort(404); // Chỉ owner mới vào được
+        $user = Auth::user();
+
+        if ($post->user_id !== $user->id && !$user->isAdmin()) {
+            abort(404); // Không phải chủ, không phải admin → chặn
         }
 
         return view('posts.edit', compact('post'));
@@ -93,10 +94,12 @@ class PostController extends Controller
 
 
 
+
     public function update(UpdatePostRequest $request, Post $post)
     {
-        //  Chỉ chủ bài viết được sửa
-        if ($post->user_id !== Auth::id()) {
+        //  Chỉ chủ bài viết hoặc admin mới được sửa
+        $user = Auth::user();
+        if ($post->user_id !== Auth::id() && !$user->isAdmin()) {
             abort(404);
         }
 
@@ -118,15 +121,11 @@ class PostController extends Controller
         }
 
         //  Nếu người chỉnh là Admin thì cho phép chỉnh status
-
         if ($request->user()->isAdmin()) {
             $post->status = $request->validated('status');
         }
 
-
-
         $post->save();
-
 
         //  Thumbnail mới? → Xoá cũ & gán mới
         if ($request->hasFile('thumbnail')) {
