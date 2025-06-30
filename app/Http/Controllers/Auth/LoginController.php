@@ -20,18 +20,23 @@ class LoginController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        // Chỉ cho đăng nhập nếu status = APPROVED
+        // Ràng buộc chỉ tài khoản đã duyệt
         $credentials['status'] = UserStatus::APPROVED;
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
+
+            // Phân nhánh quyền
+            if (Auth::user()->isAdmin()) {
+                return to_route('admin.posts.dashboard')->with('success', 'Đăng nhập thành công');
+            }
             return to_route('posts.index')->with('success', 'Đăng nhập thành công');
         }
-
         return back()->withErrors([
-            'account_status' => 'Email hoặc mật khẩu không đúng hoặc tài khoản của bạn có thể đang chờ phê duyệt, bị từ chối, bị khóa.',
+            'account_status' => 'Email hoặc mật khẩu không đúng hoặc tài khoản có thể đang chờ duyệt / từ chối / bị khóa.',
         ])->onlyInput('email');
     }
+
 
 
     public function logout(Request $request)

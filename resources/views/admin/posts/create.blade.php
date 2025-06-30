@@ -21,7 +21,7 @@
             <x-alert-success :message="session('success')" />
         @endif
 
-        <form id="postForm" action="{{ route('posts.store') }}" method="POST" enctype="multipart/form-data">
+        <form id="postForm" action="{{ route('admin.posts.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
             {{-- Tiêu đề (bắt buộc) --}}

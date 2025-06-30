@@ -8,6 +8,8 @@ use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\AdminPostController;
+use App\Http\Controllers\AdminUserController;
 
 
 // Trang mặc định
@@ -33,12 +35,29 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     Route::put('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
     Route::delete('/posts-destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroyAll');
-
-    // Route::middleware('can.updatestatus')->patch(
-    //     '/posts/{post}/status',
-    //     [PostController::class, 'updateStatus']
-    // )->name('posts.updateStatus');
 });
+
+
+//admin
+Route::prefix('admin')->middleware(['auth', 'admin', 'check.user.status'])->group(function () {
+
+    // Admin quản lý bài viết
+    Route::get('/', [AdminPostController::class, 'dashboard'])->name('admin.posts.dashboard');
+    Route::get('/posts', [AdminPostController::class, 'index'])->name('admin.posts.index');
+    Route::get('/posts/create', [AdminPostController::class, 'create'])->name('admin.posts.create');
+    Route::post('/posts', [AdminPostController::class, 'store'])->name('admin.posts.store');
+    Route::get('/posts/{post}', [AdminPostController::class, 'show'])->name('admin.posts.show');
+    Route::get('/posts/{post}/edit', [AdminPostController::class, 'edit'])->name('admin.posts.edit');
+    Route::put('/posts/{post}', [AdminPostController::class, 'update'])->name('admin.posts.update');
+    Route::delete('/posts/{post}', [AdminPostController::class, 'destroy'])->name('admin.posts.destroy');
+    Route::delete('/posts-destroy-all', [AdminPostController::class, 'destroyAll'])->name('admin.posts.destroyAll');
+
+    //Admin quản lý User
+    Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+});
+
 
 
 // Chỉ cho khách truy cập được login/register
