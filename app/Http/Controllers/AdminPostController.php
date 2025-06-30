@@ -12,6 +12,8 @@ use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Str;
 use App\Enums\UserRole;
 use App\Jobs\NotifyUserPostStatusJob;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 
 class AdminPostController extends Controller
@@ -109,49 +111,63 @@ class AdminPostController extends Controller
 
     public function update(UpdatePostRequest $request, Post $post)
     {
-        $user = Auth::user();
+        DB::beginTransaction();
 
-        if ($post->user_id !== $user->id && !$user->isAdmin()) {
-            abort(404);
-        }
+        try {
+            $user = Auth::user();
 
-        $post->title = $request->title;
-        $post->description = $request->description;
-        $post->content = $request->content;
-        $post->publish_date = $request->publish_date;
-
-        // Nếu title đổi → đổi slug
-        if ($post->isDirty('title')) {
-            $slug = Str::slug($request->title);
-            $originalSlug = $slug;
-            $count = 1;
-            while (Post::where('slug', $slug)->where('id', '!=', $post->id)->exists()) {
-                $slug = $originalSlug . '-' . $count++;
+            if ($post->user_id !== $user->id && !$user->isAdmin()) {
+                abort(404);
             }
-            $post->slug = $slug;
+
+            $post->title = $request->title;
+            $post->description = $request->description;
+            $post->content = $request->content;
+            $post->publish_date = $request->publish_date;
+
+            // Nếu title đổi → đổi slug
+            if ($post->isDirty('title')) {
+                $slug = Str::slug($request->title);
+                $originalSlug = $slug;
+                $count = 1;
+                while (Post::where('slug', $slug)->where('id', '!=', $post->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count++;
+                }
+                $post->slug = $slug;
+            }
+
+            // Lưu status cũ
+            $oldStatus = $post->status;
+
+            if ($user->isAdmin()) {
+                $post->status = $request->validated('status');
+            }
+
+            $post->save();
+
+            // Nếu status thay đổi → gửi mail
+            if ($oldStatus != $post->status) {
+                NotifyUserPostStatusJob::dispatch($post);
+            }
+
+            if ($request->hasFile('thumbnail')) {
+                $post->clearMediaCollection('thumbnails');
+                $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
+            }
+
+            DB::commit();
+
+            return to_route('admin.posts.index')->with('success', 'Cập nhật bài viết thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Cập nhật bài viết thất bại: ' . $e->getMessage());
+
+            return back()->withErrors([
+                'error' => 'Có lỗi xảy ra khi cập nhật bài viết: ' . $e->getMessage(),
+            ]);
         }
-
-        // Lưu status cũ
-        $oldStatus = $post->status;
-
-        if ($user->isAdmin()) {
-            $post->status = $request->validated('status');
-        }
-
-        $post->save();
-
-        // Nếu status thay đổi → gửi mail
-        if ($oldStatus != $post->status) {
-            NotifyUserPostStatusJob::dispatch($post);
-        }
-
-        if ($request->hasFile('thumbnail')) {
-            $post->clearMediaCollection('thumbnails');
-            $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
-        }
-
-        return to_route('admin.posts.index')->with('success', 'Cập nhật bài viết thành công!');
     }
+
 
 
 
