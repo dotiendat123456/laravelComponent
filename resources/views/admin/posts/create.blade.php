@@ -5,16 +5,11 @@
         <h3>Tạo bài viết mới</h3>
 
         {{-- Thông báo lỗi --}}
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Vui lòng kiểm tra dữ liệu:</strong>
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+        @error('error')
+            <div class="alert alert-danger" role="alert">
+                {{ $message }}
             </div>
-        @endif
+        @enderror
 
         {{-- Thông báo thành công --}}
         @if (session('success'))

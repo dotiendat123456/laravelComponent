@@ -8,6 +8,12 @@
             <x-alert-success :message="session('success')" />
         @endif
 
+        @error('error')
+            <div class="alert alert-danger" role="alert">
+                {{ $message }}
+            </div>
+        @enderror
+
         <!-- FORM TÌM KIẾM -->
         <form class="row g-3 mb-3" method="GET" action="{{ route('admin.posts.index') }}">
             <div class="col-auto">

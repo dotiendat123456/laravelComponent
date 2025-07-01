@@ -7,6 +7,11 @@
         @if (session('success'))
             <x-alert-success :message="session('success')" />
         @endif
+        @error('error')
+            <div class="alert alert-danger" role="alert">
+                {{ $message }}
+            </div>
+        @enderror
 
         <div class="mb-3 d-flex justify-content-between align-items-center">
             <a href="{{ route('posts.create') }}" class="btn btn-primary">

@@ -11,6 +11,8 @@ use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Support\Str;
 use App\Enums\UserRole;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 
 class PostController extends Controller
@@ -39,39 +41,44 @@ class PostController extends Controller
 
     public function store(StorePostRequest $request)
     {
-        // Tạo slug từ title
-        $slug = Str::slug($request->title);
+        DB::beginTransaction();
 
-        // Kiểm tra slug có trùng không, nếu có thì thêm số tăng dần
-        $originalSlug = $slug;
-        $count = 1;
+        try {
+            // Tạo slug từ title
+            $slug = Str::slug($request->title);
 
-        while (Post::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $count;
-            $count++;
-        }
+            // Kiểm tra slug có trùng không
+            $originalSlug = $slug;
+            $count = 1;
+            while (Post::where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $count++;
+            }
 
-        // Tạo bài viết
-        $post = Post::create([
-            'user_id' => Auth::id(),
-            'title' => $request->title,
-            'slug' => $slug,
-            'description' => $request->description,
-            'content' => $request->content,
-            'publish_date' => $request->publish_date,
-        ]);
+            // Tạo bài viết
+            $post = Post::create([
+                'user_id' => Auth::id(),
+                'title' => $request->title,
+                'slug' => $slug,
+                'description' => $request->description,
+                'content' => $request->content,
+                'publish_date' => $request->publish_date,
+            ]);
 
-        // Nếu có thumbnail thì lưu bằng Spatie Media
-        if ($request->hasFile('thumbnail')) {
-            $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
-        }
+            // Nếu có thumbnail thì lưu bằng Spatie Media
+            if ($request->hasFile('thumbnail')) {
+                $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
+            }
 
-        if (!$post) {
+            DB::commit();
+
+            return to_route('posts.index')->with('success', 'Tạo bài viết thành công');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Lỗi tạo bài viết: ' . $e->getMessage());
             return back()->withErrors(['error' => 'Không thể tạo bài viết, vui lòng thử lại.']);
         }
-
-        return to_route('posts.index')->with('success', 'Tạo bài viết thành công');
     }
+
 
 
     /**
@@ -117,43 +124,56 @@ class PostController extends Controller
 
     public function update(UpdatePostRequest $request, Post $post)
     {
-        //  Chỉ chủ bài viết hoặc admin mới được sửa
+        // Chỉ chủ bài viết hoặc admin mới được sửa
         $user = Auth::user();
         if ($post->user_id !== Auth::id() && !$user->isAdmin()) {
             abort(404);
         }
 
-        //  Gán dữ liệu cơ bản
-        $post->title = $request->title;
-        $post->description = $request->description;
-        $post->content = $request->content;
-        $post->publish_date = $request->publish_date;
+        DB::beginTransaction();
 
-        //  Nếu title đổi thì sinh slug mới, đảm bảo unique
-        if ($post->isDirty('title')) {
-            $slug = Str::slug($request->title);
-            $originalSlug = $slug;
-            $count = 1;
-            while (Post::where('slug', $slug)->where('id', '!=', $post->id)->exists()) {
-                $slug = $originalSlug . '-' . $count++;
+        try {
+            // Gán dữ liệu cơ bản
+            $post->title = $request->title;
+            $post->description = $request->description;
+            $post->content = $request->content;
+            $post->publish_date = $request->publish_date;
+
+            // Nếu title đổi thì sinh slug mới, đảm bảo unique
+            if ($post->isDirty('title')) {
+                $slug = Str::slug($request->title);
+                $originalSlug = $slug;
+                $count = 1;
+                while (Post::where('slug', $slug)->where('id', '!=', $post->id)->exists()) {
+                    $slug = $originalSlug . '-' . $count++;
+                }
+                $post->slug = $slug;
             }
-            $post->slug = $slug;
+
+            // Nếu người chỉnh là Admin thì cho phép chỉnh status
+            if ($request->user()->isAdmin()) {
+                $post->status = $request->validated('status');
+            }
+
+            $post->save();
+
+            // Thumbnail mới? → Xoá cũ & gán mới
+            if ($request->hasFile('thumbnail')) {
+                $post->clearMediaCollection('thumbnails');
+                $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
+            }
+
+            DB::commit();
+
+            return to_route('posts.index')->with('success', 'Cập nhật bài viết thành công!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            // Ghi log lỗi để kiểm tra nếu cần
+            Log::error('Lỗi cập nhật bài viết: ' . $e->getMessage());
+
+            return back()->withErrors(['error' => 'Đã xảy ra lỗi, vui lòng thử lại!']);
         }
-
-        //  Nếu người chỉnh là Admin thì cho phép chỉnh status
-        if ($request->user()->isAdmin()) {
-            $post->status = $request->validated('status');
-        }
-
-        $post->save();
-
-        //  Thumbnail mới? → Xoá cũ & gán mới
-        if ($request->hasFile('thumbnail')) {
-            $post->clearMediaCollection('thumbnails');
-            $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
-        }
-
-        return to_route('posts.index')->with('success', 'Cập nhật bài viết thành công!');
     }
 
 

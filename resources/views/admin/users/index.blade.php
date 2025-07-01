@@ -5,11 +5,17 @@
     <h3>Danh sách User</h3>
 
     {{-- Thông báo thành công --}}
-    @if (session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
-        </div>
-    @endif
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+     {{-- Thông báo lỗi --}}
+        @error('error')
+            <div class="alert alert-danger" role="alert">
+                {{ $message }}
+            </div>
+        @enderror
 
     {{-- Form tìm kiếm --}}
     <form method="GET" class="row g-2 mb-3">

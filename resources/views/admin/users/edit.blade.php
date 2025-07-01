@@ -4,16 +4,12 @@
     <div class="container">
         <h3>Chỉnh sửa User</h3>
 
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <strong>Có lỗi xảy ra:</strong>
-                <ul class="mb-0">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+        {{-- Thông báo lỗi --}}
+        @error('error')
+            <div class="alert alert-danger" role="alert">
+                {{ $message }}
             </div>
-        @endif
+        @enderror
 
         <form action="{{ route('admin.users.update', $user) }}" method="POST">
             @csrf

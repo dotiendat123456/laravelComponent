@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AdminUpdateProfileRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class AdminUserController extends Controller
 {
@@ -33,17 +35,36 @@ class AdminUserController extends Controller
         return view('admin.users.edit', compact('user'));
     }
 
+
+
     public function update(AdminUpdateProfileRequest $request, User $user)
     {
-        $validated = $request->validated();
+        DB::beginTransaction();
 
-        $user->update([
-            'first_name' => $validated['first_name'],
-            'last_name'  => $validated['last_name'],
-            'address'    => $validated['address'] ?? null,
-            'status'     => $validated['status'],
-        ]);
+        try {
+            $validated = $request->validated();
 
-        return to_route('admin.users.index')->with('success', 'Cập nhật user thành công.');
+            $result = $user->update([
+                'first_name' => $validated['first_name'],
+                'last_name'  => $validated['last_name'],
+                'address'    => $validated['address'] ?? null,
+                'status'     => $validated['status'],
+            ]);
+
+            if (!$result) {
+                // Nếu update trả về false
+                throw new \Exception('Không thể cập nhật user.');
+            }
+
+            DB::commit();
+
+            return to_route('admin.users.index')->with('success', 'Cập nhật user thành công.');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Lỗi cập nhật user: ' . $e->getMessage());
+
+            return back()->withErrors(['error' => 'Đã xảy ra lỗi khi cập nhật user, vui lòng thử lại!']);
+        }
     }
 }

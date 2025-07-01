@@ -51,39 +51,47 @@ class AdminPostController extends Controller
 
     public function store(StorePostRequest $request)
     {
-        // Tạo slug từ title
-        $slug = Str::slug($request->title);
+        DB::beginTransaction();
 
-        // Kiểm tra slug có trùng không, nếu có thì thêm số tăng dần
-        $originalSlug = $slug;
-        $count = 1;
+        try {
+            // Tạo slug từ title
+            $slug = Str::slug($request->title);
 
-        while (Post::where('slug', $slug)->exists()) {
-            $slug = $originalSlug . '-' . $count;
-            $count++;
+            // Kiểm tra slug có trùng không, nếu có thì thêm số tăng dần
+            $originalSlug = $slug;
+            $count = 1;
+
+            while (Post::where('slug', $slug)->exists()) {
+                $slug = $originalSlug . '-' . $count++;
+            }
+
+            // Tạo bài viết
+            $post = Post::create([
+                'user_id' => Auth::id(),
+                'title' => $request->title,
+                'slug' => $slug,
+                'description' => $request->description,
+                'content' => $request->content,
+                'publish_date' => $request->publish_date,
+            ]);
+
+            // Nếu có thumbnail thì lưu bằng Spatie Media
+            if ($request->hasFile('thumbnail')) {
+                $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
+            }
+
+            DB::commit();
+
+            return to_route('admin.posts.index')->with('success', 'Tạo bài viết thành công');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            Log::error('Lỗi tạo bài viết: ' . $e->getMessage());
+
+            return back()->withErrors(['error' => 'Đã xảy ra lỗi khi tạo bài viết, vui lòng thử lại!']);
         }
-
-        // Tạo bài viết
-        $post = Post::create([
-            'user_id' => Auth::id(),
-            'title' => $request->title,
-            'slug' => $slug,
-            'description' => $request->description,
-            'content' => $request->content,
-            'publish_date' => $request->publish_date,
-        ]);
-
-        // Nếu có thumbnail thì lưu bằng Spatie Media
-        if ($request->hasFile('thumbnail')) {
-            $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
-        }
-
-        if (!$post) {
-            return back()->withErrors(['error' => 'Không thể tạo bài viết, vui lòng thử lại.']);
-        }
-
-        return to_route('admin.posts.index')->with('success', 'Tạo bài viết thành công');
     }
+
 
 
     /**
@@ -170,11 +178,6 @@ class AdminPostController extends Controller
 
 
 
-
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Post $post)
     {
         if (!$post) {
