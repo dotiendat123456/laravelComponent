@@ -44,7 +44,7 @@ class PostController extends Controller
         DB::beginTransaction();
 
         try {
-            // Tạo slug từ title
+            // Tạo slug từ title( Dòng này sẽ chuyển từ Unicode sang dạng slug không dấu, phân cách bằng dấu -)
             $slug = Str::slug($request->title);
 
             // Kiểm tra slug có trùng không

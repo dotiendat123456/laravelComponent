@@ -49,7 +49,7 @@
                             <td>{{ $posts->firstItem() + $index }}</td>
                             <td>
                                 @if ($post->thumbnail)
-                                    <img src="{{ $post->thumbnail }}" width="60" class="rounded border">
+                                    <img src="{{ asset($post->thumbnail) }}" width="60" class="rounded border">
                                 @else
                                     <span class="text-muted">Không có</span>
                                 @endif

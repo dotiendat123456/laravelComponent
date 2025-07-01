@@ -70,12 +70,13 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
 
-                @if ($post->getFirstMediaUrl('thumbnails'))
+                @if ($post->thumbnail)
                     <div class="mt-2">
-                        <img src="{{ $post->getFirstMediaUrl('thumbnails') }}" alt="Thumbnail hiện tại"
+                        <img src="{{ asset($post->thumbnail)}}" alt="Thumbnail hiện tại"
                             style="max-width: 200px;">
                     </div>
                 @endif
+
             </div>
 
             {{-- Trạng thái --}}
