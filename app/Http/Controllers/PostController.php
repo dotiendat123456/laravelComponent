@@ -155,7 +155,7 @@ class PostController extends Controller
                 $post->status = $request->validated('status');
             }
 
-            $post->save();
+            $post->save();//trỏ tới create hoặc update, delete
 
             // Thumbnail mới? → Xoá cũ & gán mới
             if ($request->hasFile('thumbnail')) {

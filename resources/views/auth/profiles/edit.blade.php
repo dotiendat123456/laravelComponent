@@ -20,7 +20,8 @@
                             @csrf
                             {{-- Họ --}}
                             <div class="row mb-3">
-                                <label for="first_name" class="col-md-4 col-form-label text-md-end">Họ</label>
+                                <label for="first_name" class="col-md-4 col-form-label text-md-end">Họ<span
+                                        class="text-danger">*</span></label>
 
                                 <div class="col-md-6">
                                     <input id="first_name" type="text"
@@ -37,7 +38,8 @@
 
                             {{-- Tên --}}
                             <div class="row mb-3">
-                                <label for="last_name" class="col-md-4 col-form-label text-md-end">Tên</label>
+                                <label for="last_name" class="col-md-4 col-form-label text-md-end">Tên<span
+                                        class="text-danger">*</span></label>
 
                                 <div class="col-md-6">
                                     <input id="last_name" type="text"
