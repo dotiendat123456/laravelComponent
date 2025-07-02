@@ -34,6 +34,8 @@ class AdminUserController extends Controller
 
     public function edit(User $user)
     {
+        $this->authorize('updateStatus', $user);
+
         return view('admin.users.edit', compact('user'));
     }
 
@@ -41,6 +43,8 @@ class AdminUserController extends Controller
 
     public function update(AdminUpdateProfileRequest $request, User $user)
     {
+        $this->authorize('updateStatus', $user);
+
         DB::beginTransaction();
 
         try {
