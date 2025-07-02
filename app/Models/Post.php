@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Enums\UserRole;
+use App\Enums\PostStatus;
 
 class Post extends Model implements HasMedia
 {
@@ -22,6 +23,7 @@ class Post extends Model implements HasMedia
         'description',
         'content',
         'publish_date',
+        'status', // PHẢI CÓ!
     ];
 
 
@@ -42,5 +44,6 @@ class Post extends Model implements HasMedia
     }
     protected $casts = [
         'publish_date' => 'datetime',
+        'status' => PostStatus::class,
     ];
 }

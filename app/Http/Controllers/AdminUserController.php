@@ -15,20 +15,22 @@ class AdminUserController extends Controller
         $query = User::query();
 
         if ($request->filled('name')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('first_name', 'like', '%' . $request->name . '%')
-                    ->orWhere('last_name', 'like', '%' . $request->name . '%');
-            });
+            $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%']);
         }
 
         if ($request->filled('email')) {
-            $query->where('email', 'like', '%' . $request->email . '%');
+            $query->where('email', 'like', "%{$request->email}%");
         }
 
-        $users = $query->latest()->paginate(10);
+        $users = $query->latest()->paginate(1);
+
+        if ($request->ajax()) {
+            return view('admin.users._table', compact('users'))->render();
+        }
 
         return view('admin.users.index', compact('users'));
     }
+
 
     public function edit(User $user)
     {

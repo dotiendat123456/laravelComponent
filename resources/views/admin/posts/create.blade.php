@@ -19,7 +19,7 @@
         <form id="postForm" action="{{ route('admin.posts.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
 
-            {{-- Tiêu đề (bắt buộc) --}}
+            {{-- Tiêu đề --}}
             <div class="mb-3">
                 <label for="title" class="form-label">
                     Tiêu đề <span class="text-danger">*</span>
@@ -31,7 +31,7 @@
                 @enderror
             </div>
 
-            {{-- Mô tả (tùy chọn) --}}
+            {{-- Mô tả --}}
             <div class="mb-3">
                 <label for="description" class="form-label">Mô tả</label>
                 <input type="text" name="description" id="description" value="{{ old('description') }}"
@@ -41,10 +41,10 @@
                 @enderror
             </div>
 
-            {{-- Nội dung (Quill Editor) --}}
+            {{-- Nội dung --}}
             <div class="mb-3">
                 <label class="form-label">Nội dung</label>
-                <div id="editor" style="height: 300px;">{!! old('content') !!}</div>
+                <div id="editor" style="height: 300px;"></div>
                 <input type="hidden" name="content" id="content">
                 @error('content')
                     <div class="text-danger">{{ $message }}</div>
@@ -87,6 +87,12 @@
         const quill = new Quill('#editor', {
             theme: 'snow'
         });
+
+        // Lấy old content từ Blade (escape quote cẩn thận)
+        const oldContent = `{!! old('content') !!}`;
+        if (oldContent) {
+            quill.root.innerHTML = oldContent;
+        }
 
         document.getElementById('postForm').addEventListener('submit', function (e) {
             document.getElementById('content').value = quill.root.innerHTML;

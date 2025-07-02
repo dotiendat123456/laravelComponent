@@ -72,41 +72,25 @@
 
                 @if ($post->thumbnail)
                     <div class="mt-2">
-                        <img src="{{ asset($post->thumbnail)}}" alt="Thumbnail hiện tại"
-                            style="max-width: 200px;">
+                        <img src="{{ asset($post->thumbnail)}}" alt="Thumbnail hiện tại" style="max-width: 200px;">
                     </div>
                 @endif
 
             </div>
 
-            {{-- Trạng thái --}}
-            @if (Auth::user()->isAdmin())
+            @can('updateStatus', $post)
                 <div class="mb-3">
                     <label for="status" class="form-label">Trạng thái</label>
                     <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
-                        <option value="0" {{ old('status', $post->status) == 0 ? 'selected' : '' }}>Bài viết mới</option>
-                        <option value="1" {{ old('status', $post->status) == 1 ? 'selected' : '' }}>Đã phê duyệt</option>
-                        <option value="2" {{ old('status', $post->status) == 2 ? 'selected' : '' }}>Khác</option>
+                        @foreach (\App\Enums\PostStatus::cases() as $status)
+                            <option value="{{ $status->value }}" {{ old('status', $post->status->value ?? $post->status) == $status->value ? 'selected' : '' }}>
+                                {{ $status->label() }}
+                            </option>
+                        @endforeach
                     </select>
-                    @error('status')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
+
                 </div>
-            @else
-                <input type="hidden" name="status" value="{{ $post->status }}">
-                <div class="mb-3">
-                    <label class="form-label">Trạng thái</label>
-                    <input type="text"
-                        class="form-control"
-                        value="@switch($post->status)
-                                    @case(0) Bài viết mới @break
-                                    @case(1) Đã cập nhật @break
-                                    @case(2) Khác @break
-                                    @default Không rõ
-                                @endswitch"
-                        readonly>
-                </div>
-            @endif
+            @endcan
 
             {{-- Submit --}}
             <button type="submit" class="btn btn-primary">Cập nhật bài viết</button>

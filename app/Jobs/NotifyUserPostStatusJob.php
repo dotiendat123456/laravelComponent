@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use App\Enums\PostStatus;
 
 class NotifyUserPostStatusJob implements ShouldQueue
 {
@@ -23,13 +24,13 @@ class NotifyUserPostStatusJob implements ShouldQueue
 
     public function handle()
     {
-        if ($this->post->status == 1) {
-            $statusText = 'được PHÊ DUYỆT';
-        } elseif ($this->post->status == 2) {
-            $statusText = ' bị TỪ CHỐI';
-        } else {
-            $statusText = 'được CẬP NHẬT';
-        }
+        $status = $this->post->status;
+
+        $statusText = match ($status) {
+            PostStatus::APPROVED => 'được PHÊ DUYỆT',
+            PostStatus::DENY     => 'bị TỪ CHỐI',
+            default              => 'được CẬP NHẬT',
+        };
 
         Mail::raw(
             "Xin chào {$this->post->user->name}, bài viết \"{$this->post->title}\" của bạn đã {$statusText}.",

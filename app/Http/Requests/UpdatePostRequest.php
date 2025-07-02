@@ -3,38 +3,39 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use App\Enums\PostStatus;
 
 class UpdatePostRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         $rules = [
-            'title' => 'required|string|max:100',
-            'description' => 'nullable|string|max:200',
-            'content' => 'nullable|string',
-            'publish_date' => 'nullable|date',
-            'thumbnail' => 'nullable|image|max:2048',
+            'title' => ['required', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:200'],
+            'content' => ['nullable', 'string'],
+            'publish_date' => ['nullable', 'date'],
+            'thumbnail' => ['nullable', 'image', 'max:2048'],
         ];
+
         if ($this->user()->isAdmin()) {
-            $rules['status'] = ['required', 'in:0,1,2'];
+            $rules['status'] = [
+                'required',
+                Rule::in([
+                    PostStatus::PENDING->value,
+                    PostStatus::APPROVED->value,
+                    PostStatus::DENY->value,
+                ]),
+            ];
         }
 
         return $rules;
     }
-
 
     public function messages(): array
     {
@@ -53,6 +54,7 @@ class UpdatePostRequest extends FormRequest
             'thumbnail.image' => 'Thumbnail phải là định dạng ảnh.',
             'thumbnail.max' => 'Thumbnail không được vượt quá 2MB.',
 
+            'status.required' => 'Vui lòng chọn trạng thái.',
             'status.in' => 'Trạng thái bài viết không hợp lệ.',
         ];
     }

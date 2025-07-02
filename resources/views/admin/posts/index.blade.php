@@ -15,7 +15,7 @@
         @enderror
 
         <!-- FORM TÌM KIẾM -->
-        <form class="row g-3 mb-3" method="GET" action="{{ route('admin.posts.index') }}">
+        <form id="searchForm" class="row g-3 mb-3" method="GET" action="{{ route('admin.posts.index') }}">
             <div class="col-auto">
                 <input type="text" name="title" value="{{ request('title') }}" class="form-control"
                     placeholder="Tìm theo tiêu đề">
@@ -49,80 +49,11 @@
 
         <!-- BẢNG -->
         <div class="table-responsive">
-            <table class="table table-striped table-hover align-middle table-fixed">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width: 5%;">ID</th>
-                        <th style="width: 25%;">Tiêu đề</th>
-                        <th style="width: 15%;">User Email</th>
-                        <th style="width: 15%;">Trạng thái</th>
-                        <th style="width: 20%;">Ngày tạo</th>
-                        <th style="width: 20%;">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($posts as $post)
-                        <tr>
-                            <td>{{ $post->id }}</td>
-                            <td>{{ $post->title }}</td>
-                            <td>{{ $post->user->email }}</td>
-                            <td>
-                                <span class="badge 
-                                    @switch($post->status)
-                                        @case(0) bg-secondary @break
-                                        @case(1) bg-success @break
-                                        @case(2) bg-danger @break
-                                        @default bg-dark
-                                    @endswitch">
-                                    @switch($post->status)
-                                        @case(0) Bài mới @break
-                                        @case(1) Đã phê duyệt @break
-                                        @case(2) Từ chối @break
-                                        @default Không rõ
-                                    @endswitch
-                                </span>
-                            </td>
-                            <td>{{ $post->created_at->format('d/m/Y') }}</td>
-                            <td>
-                                <div class="d-inline-flex align-items-center gap-2">
-                                    <!-- Xem chi tiết -->
-                                    <a href="{{ route('news.show', $post->slug) }}"
-                                       class="btn btn-sm btn-outline-info p-1"
-                                       target="_blank" title="Xem chi tiết">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
-
-                                    <!-- Sửa -->
-                                    <a href="{{ route('admin.posts.edit', $post->id) }}"
-                                       class="btn btn-sm btn-outline-warning p-1"
-                                       title="Sửa">
-                                        <i class="fa-solid fa-edit"></i>
-                                    </a>
-                                    <!-- Xóa -->
-                                    <form action="{{ route('admin.posts.destroy', $post->id) }}" method="POST"
-                                          class="d-inline"
-                                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa bài viết này?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">Không có bài viết nào.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+            <div id="postsTable">
+                @include('admin.posts._table', ['posts' => $posts])
+            </div>
         </div>
 
-        <div class="mt-3">
-            {{ $posts->links('pagination::bootstrap-5') }}
-        </div>
     </div>
 @endsection
 
@@ -133,4 +64,36 @@
             width: 100%;
         }
     </style>
+@endpush
+
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Chặn submit ➜ AJAX tìm kiếm
+        $('#searchForm').on('submit', function (e) {
+            e.preventDefault();
+            let query = $(this).serialize();
+            fetchPosts(query);
+        });
+
+        // Bấm phân trang ➜ AJAX
+        $(document).on('click', '.pagination a', function (e) {
+            e.preventDefault();
+            let url = $(this).attr('href');
+            let query = url.split('?')[1];
+            fetchPosts(query);
+        });
+
+        function fetchPosts(query) {
+            $.ajax({
+                url: "{{ route('admin.posts.index') }}" + '?' + query,
+                success: function (data) {
+                    $('#postsTable').html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+    </script>
 @endpush

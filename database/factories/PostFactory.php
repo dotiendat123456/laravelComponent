@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Post;
 use App\Models\User;
+use App\Enums\PostStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -29,7 +30,7 @@ class PostFactory extends Factory
             'description' => $this->faker->text(200),
             'content' => $this->faker->paragraph,
             'publish_date' => now(),
-            'status' => 0,
+            'status' => PostStatus::PENDING->value,
         ];
     }
 }

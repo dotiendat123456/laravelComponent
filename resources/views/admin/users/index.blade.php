@@ -1,91 +1,80 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h3>Danh sách User</h3>
+    <div class="container">
+        <h3 class="mb-4">Danh sách User</h3>
 
-    {{-- Thông báo thành công --}}
+        {{-- Thông báo thành công --}}
         @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
             </div>
         @endif
-     {{-- Thông báo lỗi --}}
+
+        {{-- Thông báo lỗi --}}
         @error('error')
             <div class="alert alert-danger" role="alert">
                 {{ $message }}
             </div>
         @enderror
 
-    {{-- Form tìm kiếm --}}
-    <form method="GET" class="row g-2 mb-3">
-        <div class="col-auto">
-            <input type="text" name="name" value="{{ request('name') }}" class="form-control" placeholder="Tên">
+        {{-- Form tìm kiếm --}}
+        <form id="searchForm" method="GET" class="row g-2 mb-3">
+            <div class="col-auto">
+                <input type="text" name="name" value="{{ request('name') }}" class="form-control" placeholder="Tên">
+            </div>
+            <div class="col-auto">
+                <input type="text" name="email" value="{{ request('email') }}" class="form-control" placeholder="Email">
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-primary">Tìm kiếm</button>
+            </div>
+        </form>
+
+        {{-- Bảng + phân trang AJAX --}}
+        <div id="usersTable">
+            @include('admin.users._table', ['users' => $users])
         </div>
-        <div class="col-auto">
-            <input type="text" name="email" value="{{ request('email') }}" class="form-control" placeholder="Email">
-        </div>
-        <div class="col-auto">
-            <button class="btn btn-primary">Tìm kiếm</button>
-        </div>
-    </form>
-
-    {{-- Table --}}
-    <table class="table table-striped table-hover align-middle">
-        <thead class="table-light">
-            <tr>
-                <th>Tên</th>
-                <th>Email</th>
-                <th>Địa chỉ</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse ($users as $user)
-                <tr>
-                    <td>{{ $user->first_name }} {{ $user->last_name }}</td>
-                    <td>{{ $user->email }}</td>
-                    <td>{{ $user->address }}</td>
-                    <td>
-                        @switch($user->status)
-                            @case(App\Enums\UserStatus::PENDING)
-                                <span class="badge bg-secondary">{{ $user->status->label() }}</span>
-                                @break
-
-                            @case(App\Enums\UserStatus::APPROVED)
-                                <span class="badge bg-success">{{ $user->status->label() }}</span>
-                                @break
-
-                            @case(App\Enums\UserStatus::REJECTED)
-                                <span class="badge bg-danger">{{ $user->status->label() }}</span>
-                                @break
-
-                            @case(App\Enums\UserStatus::LOCKED)
-                                <span class="badge bg-dark">{{ $user->status->label() }}</span>
-                                @break
-
-                            @default
-                                <span class="badge bg-light">Không rõ</span>
-                        @endswitch
-                    </td>
-                    <td>
-                        <a href="{{ route('admin.users.edit', $user) }}" class="btn btn-sm btn-outline-warning">
-                            <i class="fa-solid fa-edit"></i> Sửa
-                        </a>
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="5" class="text-center text-muted">Không có user nào.</td>
-                </tr>
-            @endforelse
-        </tbody>
-    </table>
-
-    {{-- Phân trang --}}
-    <div class="mt-3">
-        {{ $users->links('pagination::bootstrap-5') }}
     </div>
-</div>
 @endsection
+
+@push('styles')
+    <style>
+        .table-fixed {
+            table-layout: fixed;
+            width: 100%;
+        }
+    </style>
+@endpush
+
+@push('scripts')
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        // Chặn submit ➜ AJAX tìm kiếm
+        $('#searchForm').on('submit', function (e) {
+            e.preventDefault();
+            let query = $(this).serialize();
+            fetchUsers(query);
+        });
+
+        // Bấm link trang ➜ AJAX
+        $(document).on('click', '.pagination a', function (e) {
+            e.preventDefault();
+            let url = $(this).attr('href');
+            let query = url.split('?')[1];
+            fetchUsers(query);
+        });
+
+        function fetchUsers(query) {
+            $.ajax({
+                url: "{{ route('admin.users.index') }}?" + query,
+                success: function (data) {
+                    $('#usersTable').html(data);
+                },
+                error: function (err) {
+                    console.log(err);
+                }
+            });
+        }
+    </script>
+@endpush

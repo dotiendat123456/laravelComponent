@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use App\Enums\PostStatus;
 
 return new class extends Migration
 {
@@ -19,11 +20,15 @@ return new class extends Migration
             $table->string('description', 200)->nullable();
             $table->text('content')->nullable();
             $table->timestamp('publish_date')->nullable();
-            $table->tinyInteger('status')->default(0); // 0 mới, 1 cập nhật, 2 ?
+
+            // Trạng thái bài viết: 0 = PENDING, 1 = APPROVED, 2 = DENY
+            $table->tinyInteger('status')->default(PostStatus::PENDING->value);
+
             $table->timestamps();
             $table->softDeletes();
         });
     }
+
 
 
     /**

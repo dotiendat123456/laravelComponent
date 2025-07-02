@@ -7,8 +7,8 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\StorePostRequest;
-use App\Http\Requests\UpdatePostRequest;
+use App\Http\Requests\AdminStorePostRequest;
+use App\Http\Requests\AdminUpdatePostRequest;
 use Illuminate\Support\Str;
 use App\Enums\UserRole;
 use App\Jobs\NotifyUserPostStatusJob;
@@ -27,19 +27,26 @@ class AdminPostController extends Controller
         $query = Post::query()->with('user');
 
         if ($request->filled('title')) {
-            $query->where('title', 'like', '%' . $request->title . '%');
+            $query->where('title', 'like', "%{$request->title}%");
         }
 
         if ($request->filled('email')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('email', 'like', '%' . $request->email . '%');
-            });
+            $query->whereHas(
+                'user',
+                fn($q) =>
+                $q->where('email', 'like', "%{$request->email}%")
+            );
         }
 
-        $posts = $query->latest()->paginate(5);
+        $posts = $query->latest()->paginate(5)->withQueryString();
+
+        if ($request->ajax()) {
+            return view('admin.posts._table', compact('posts'))->render();
+        }
 
         return view('admin.posts.index', compact('posts'));
     }
+
 
 
     public function create()
@@ -49,7 +56,7 @@ class AdminPostController extends Controller
 
 
 
-    public function store(StorePostRequest $request)
+    public function store(AdminStorePostRequest $request)
     {
         DB::beginTransaction();
 
@@ -106,55 +113,39 @@ class AdminPostController extends Controller
 
     public function edit(Post $post)
     {
-        $user = Auth::user();
-
-        if ($post->user_id !== $user->id && !$user->isAdmin()) {
-            abort(404); // Không phải chủ, không phải admin → chặn
-        }
+        $this->authorize('update', $post);
 
         return view('admin.posts.edit', compact('post'));
     }
 
 
 
-    public function update(UpdatePostRequest $request, Post $post)
+
+    public function update(AdminUpdatePostRequest $request, Post $post)
     {
+        $this->authorize('update', $post);
+
         DB::beginTransaction();
 
         try {
             $user = Auth::user();
 
-            if ($post->user_id !== $user->id && !$user->isAdmin()) {
-                abort(404);
-            }
-
-            $post->title = $request->title;
-            $post->description = $request->description;
-            $post->content = $request->content;
-            $post->publish_date = $request->publish_date;
-
-            // Nếu title đổi → đổi slug
-            if ($post->isDirty('title')) {
-                $slug = Str::slug($request->title);
-                $originalSlug = $slug;
-                $count = 1;
-                while (Post::where('slug', $slug)->where('id', '!=', $post->id)->exists()) {
-                    $slug = $originalSlug . '-' . $count++;
-                }
-                $post->slug = $slug;
-            }
-
-            // Lưu status cũ
             $oldStatus = $post->status;
 
+            $data = [
+                'title' => $request->title,
+                'description' => $request->description,
+                'content' => $request->content,
+                'publish_date' => $request->publish_date,
+            ];
+
             if ($user->isAdmin()) {
-                $post->status = $request->validated('status');
+                $data['status'] = $request->validated('status');
             }
 
-            $post->save();
+            $post->update($data);
 
-            // Nếu status thay đổi → gửi mail
-            if ($oldStatus != $post->status) {
+            if (($data['status'] ?? $oldStatus) != $oldStatus) {
                 NotifyUserPostStatusJob::dispatch($post);
             }
 
@@ -178,16 +169,18 @@ class AdminPostController extends Controller
 
 
 
+
+
+
     public function destroy(Post $post)
     {
-        if (!$post) {
-            return back()->withErrors(['error' => 'Bài viết không tồn tại']);
-        }
+        $this->authorize('delete', $post);
 
         $post->delete();
 
         return back()->with('success', 'Admin đã xoá bài viết thành công.');
     }
+
 
 
     public function destroyAll()

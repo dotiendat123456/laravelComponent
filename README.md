@@ -52,3 +52,5 @@ php artisan migrate
 
 
 php artisan storage:link
+
+Cài đặt policy
