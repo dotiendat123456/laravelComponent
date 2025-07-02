@@ -183,10 +183,20 @@ class PostController extends Controller
     {
         $this->authorize('delete', $post);
 
-        $post->delete();
+        DB::beginTransaction();
+        try {
+            $post->delete();
+            DB::commit();
 
-        return back()->with('success', 'Xóa bài viết thành công');
+            return back()->with('success', 'Xóa bài viết thành công');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Post deletion failed: ' . $e->getMessage());
+
+            return back()->withErrors(['error' => 'Xóa bài viết thất bại. Vui lòng thử lại.']);
+        }
     }
+
 
 
     public function destroyAll()
@@ -201,8 +211,17 @@ class PostController extends Controller
             return back()->withErrors(['error' => 'Không có bài viết nào để xoá']);
         }
 
-        $user->posts()->delete();
+        DB::beginTransaction();
+        try {
+            $user->posts()->delete();
+            DB::commit();
 
-        return back()->with('success', 'Đã xoá tất cả bài viết của bạn');
+            return back()->with('success', 'Đã xoá tất cả bài viết của bạn');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk post deletion failed: ' . $e->getMessage());
+
+            return back()->withErrors(['error' => 'Xoá tất cả bài viết thất bại. Vui lòng thử lại.']);
+        }
     }
 }

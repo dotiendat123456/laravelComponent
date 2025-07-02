@@ -38,7 +38,7 @@ class AdminPostController extends Controller
             );
         }
 
-        $posts = $query->latest()->paginate(5)->withQueryString();
+        $posts = $query->latest('id')->paginate(5)->withQueryString();
 
         if ($request->ajax()) {
             return view('admin.posts._table', compact('posts'))->render();
@@ -46,6 +46,7 @@ class AdminPostController extends Controller
 
         return view('admin.posts.index', compact('posts'));
     }
+
 
 
 
@@ -176,17 +177,36 @@ class AdminPostController extends Controller
     {
         $this->authorize('delete', $post);
 
-        $post->delete();
+        DB::beginTransaction();
+        try {
+            $post->delete();
+            DB::commit();
 
-        return back()->with('success', 'Admin đã xoá bài viết thành công.');
+            return back()->with('success', 'Admin đã xoá bài viết thành công.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Post deletion failed: ' . $e->getMessage());
+
+            return back()->withErrors('Xoá bài viết thất bại. Vui lòng thử lại.');
+        }
     }
+
 
 
 
     public function destroyAll()
     {
-        Post::query()->delete();  // Xoá tất cả bài viết, không cần theo user
+        DB::beginTransaction();
+        try {
+            Post::query()->delete();
+            DB::commit();
 
-        return back()->with('success', 'Admin đã xoá tất cả bài viết.');
+            return back()->with('success', 'Admin đã xoá tất cả bài viết.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Bulk post deletion failed: ' . $e->getMessage());
+
+            return back()->withErrors('Xoá tất cả bài viết thất bại. Vui lòng thử lại.');
+        }
     }
 }
