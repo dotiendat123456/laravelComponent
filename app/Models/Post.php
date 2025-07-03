@@ -19,7 +19,7 @@ class Post extends Model implements HasMedia
     protected $fillable = [
         'user_id',
         'title',
-        'slug',           // << PHẢI CÓ!
+        'slug',           // PHẢI CÓ!
         'description',
         'content',
         'publish_date',

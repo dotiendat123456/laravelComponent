@@ -83,8 +83,9 @@
                     <label for="status" class="form-label">Trạng thái</label>
                     <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
                         @foreach (\App\Enums\PostStatus::cases() as $status)
-                            <option value="{{ $status->value }}" {{ old('status', $post->status->value ?? $post->status) == $status->value ? 'selected' : '' }}>
+                            <option value="{{ $status->value }}" {{ old('status', $post->status->value) == $status->value ? 'selected' : '' }}>
                                 {{ $status->label() }}
+                            </option>
                             </option>
                         @endforeach
                     </select>
