@@ -124,7 +124,7 @@ class AdminPostController extends Controller
 
     public function update(AdminUpdatePostRequest $request, Post $post)
     {
-        $this->authorize('update', $post);
+        $this->authorize('updateStatus', $post);
 
         DB::beginTransaction();
 

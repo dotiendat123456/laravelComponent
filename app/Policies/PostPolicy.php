@@ -38,7 +38,7 @@ class PostPolicy
 
     public function updateStatus(User $user, Post $post)
     {
-        return $user->isAdmin;
+        return $user->isAdmin();
     }
     // Quyền xoá
     public function delete(User $user, Post $post)
