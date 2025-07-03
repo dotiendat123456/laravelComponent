@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 
 
+
 class PostController extends Controller
 {
     public function index(Request $request)
@@ -40,7 +41,7 @@ class PostController extends Controller
         $posts = $query->latest()->paginate(5)->withQueryString();
 
         if ($request->ajax()) {
-            return view('posts._table', compact('posts'))->render();
+            return view('posts._table', compact('posts'))->render(); //.render() sẽ biến View thành chuỗi HTML, chứ không trả về Response HTTP trực tiếp.
         }
 
         return view('posts.index', compact('posts'));

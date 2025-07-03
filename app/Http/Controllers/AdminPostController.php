@@ -41,7 +41,7 @@ class AdminPostController extends Controller
         $posts = $query->latest('id')->paginate(5)->withQueryString();
 
         if ($request->ajax()) {
-            return view('admin.posts._table', compact('posts'))->render();
+            return view('admin.posts._table', compact('posts'))->render(); //.render() sẽ biến View thành chuỗi HTML, chứ không trả về Response HTTP trực tiếp.
         }
 
         return view('admin.posts.index', compact('posts'));
