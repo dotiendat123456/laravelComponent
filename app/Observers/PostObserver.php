@@ -33,19 +33,21 @@ class PostObserver
     {
         $baseSlug = Str::slug($title);
         $slug = $baseSlug;
-        $attempt = 0;
 
-        do {
-            $exists = Post::where('slug', $slug)
-                ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
-                ->exists();
+        $exists = Post::where('slug', $slug)
+            ->when($ignoreId, fn($q) => $q->where('id', '!=', $ignoreId))
+            ->exists();
 
-            if ($exists) {
-                $hash = substr(md5(Str::uuid() . $attempt), 0, 6);
-                $slug = $baseSlug . '-' . $hash;
-                $attempt++;
+        if ($exists) {
+            if ($ignoreId) {
+                // Nếu có id (update) thì hash theo id
+                $hash = substr(md5($ignoreId), 0, 6);
+            } else {
+                // Nếu chưa có id (store) thì hash uuid như cũ
+                $hash = substr(md5(Str::uuid()), 0, 6);
             }
-        } while ($exists);
+            $slug = $baseSlug . '-' . $hash;
+        }
 
         return $slug;
     }
