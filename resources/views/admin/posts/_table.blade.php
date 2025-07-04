@@ -1,5 +1,5 @@
 <div class="table-responsive">
-    <table class="table table-striped table-hover align-middle table-fixed">
+    <table id="postsTable" class="table table-striped table-hover align-middle table-fixed">
         <thead class="table-light">
             <tr>
                 <th style="width: 5%;">ID</th>
@@ -67,8 +67,4 @@
             @endforelse
         </tbody>
     </table>
-</div>
-
-<div class="mt-3">
-    {{ $posts->links('pagination::bootstrap-5') }}
 </div>

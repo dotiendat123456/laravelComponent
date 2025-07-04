@@ -14,7 +14,7 @@
             </div>
         @enderror
 
-        <!-- FORM TÌM KIẾM -->
+        <!-- FORM TÌM KIẾM (nếu vẫn muốn filter trước khi render) -->
         <form id="searchForm" class="row g-3 mb-3" method="GET" action="{{ route('admin.posts.index') }}">
             <div class="col-auto">
                 <input type="text" name="title" value="{{ request('title') }}" class="form-control"
@@ -25,11 +25,11 @@
                     placeholder="Tìm theo email user">
             </div>
             <div class="col-auto">
-                <button type="submit" class="btn btn-primary">Tìm kiếm</button>
+                <button type="submit" class="btn btn-primary">Lọc</button>
             </div>
         </form>
 
-        <!-- NÚT TẠO MỚI TRÁI & XÓA TẤT CẢ PHẢI -->
+        <!-- NÚT TẠO MỚI & XÓA TẤT CẢ -->
         <div class="mb-3 d-flex justify-content-between">
             <a href="{{ route('admin.posts.create') }}" class="btn btn-success">
                 <i class="fa-solid fa-plus"></i> Tạo mới
@@ -49,11 +49,8 @@
 
         <!-- BẢNG -->
         <div class="table-responsive">
-            <div id="postsTable">
-                @include('admin.posts._table', ['posts' => $posts])
-            </div>
+            @include('admin.posts._table', ['posts' => $posts])
         </div>
-
     </div>
 @endsection
 
@@ -63,37 +60,44 @@
             table-layout: fixed;
             width: 100%;
         }
+
+        #postsTable tbody tr {
+            height: 70px;
+            /* 👈 Chiều cao hàng cố định */
+        }
+
+        #postsTable td {
+            vertical-align: middle;
+            /* 👈 Canh giữa nội dung theo chiều dọc */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Nếu muốn mô tả nhiều dòng vẫn ẩn */
+        #postsTable td .description {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            /* Số dòng tối đa */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 @endpush
 
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Chặn submit ➜ AJAX tìm kiếm
-        $('#searchForm').on('submit', function (e) {
-            e.preventDefault();
-            let query = $(this).serialize();
-            fetchPosts(query);
-        });
-
-        // Bấm phân trang ➜ AJAX
-        $(document).on('click', '.pagination a', function (e) {
-            e.preventDefault();
-            let url = $(this).attr('href');
-            let query = url.split('?')[1];
-            fetchPosts(query);
-        });
-
-        function fetchPosts(query) {
-            $.ajax({
-                url: "{{ route('admin.posts.index') }}" + '?' + query,
-                success: function (data) {
-                    $('#postsTable').html(data);
-                },
-                error: function (err) {
-                    console.log(err);
+        $(document).ready(function () {
+            $('#postsTable').DataTable({
+                pageLength: 5, // Hiển thị 5 dòng mặc định
+                lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+                ordering: false,
+                searching: false,
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
                 }
             });
-        }
+        });
     </script>
 @endpush

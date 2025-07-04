@@ -24,28 +24,24 @@ class PostController extends Controller
     {
         $user = Auth::user();
 
+        // Base query
         if ($user->isAdmin()) {
             $query = Post::query()->with('user');
-
-            if ($request->filled('title')) {
-                $query->where('title', 'like', "%{$request->title}%");
-            }
         } else {
             $query = $user->posts()->with('user');
-
-            if ($request->filled('title')) {
-                $query->where('title', 'like', "%{$request->title}%");
-            }
         }
 
-        $posts = $query->latest()->paginate(5)->withQueryString();
-
-        if ($request->ajax()) {
-            return view('posts._table', compact('posts'))->render(); //.render() sẽ biến View thành chuỗi HTML, chứ không trả về Response HTTP trực tiếp.
+        // Nếu vẫn cần filter title (DataTables client-side sẽ filter tốt hơn)
+        if ($request->filled('title')) {
+            $query->where('title', 'like', "%{$request->title}%");
         }
+
+        // Lấy toàn bộ, KHÔNG paginate
+        $posts = $query->latest()->get();
 
         return view('posts.index', compact('posts'));
     }
+
 
 
 

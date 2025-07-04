@@ -1,4 +1,4 @@
-<table class="table table-striped table-hover align-middle">
+<table id="usersTable" class="table table-striped table-hover align-middle table-fixed">
     <thead class="table-light">
         <tr>
             <th style="width: 20%;">Tên</th>
@@ -45,7 +45,3 @@
         @endforelse
     </tbody>
 </table>
-
-<div class="mt-3">
-    {{ $users->links('pagination::bootstrap-5') }}
-</div>

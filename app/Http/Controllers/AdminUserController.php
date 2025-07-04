@@ -22,14 +22,11 @@ class AdminUserController extends Controller
             $query->where('email', 'like', "%{$request->email}%");
         }
 
-        $users = $query->latest()->paginate(1);
-
-        if ($request->ajax()) {
-            return view('admin.users._table', compact('users'))->render();
-        }
+        $users = $query->latest()->get(); // ✅ KHÔNG paginate nữa
 
         return view('admin.users.index', compact('users'));
     }
+
 
 
     public function edit(User $user)

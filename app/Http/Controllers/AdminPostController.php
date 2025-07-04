@@ -31,21 +31,16 @@ class AdminPostController extends Controller
         }
 
         if ($request->filled('email')) {
-            $query->whereHas(
-                'user',
-                fn($q) =>
-                $q->where('email', 'like', "%{$request->email}%")
-            );
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('email', 'like', "%{$request->email}%");
+            });
         }
 
-        $posts = $query->latest('id')->paginate(5)->withQueryString();
-
-        if ($request->ajax()) {
-            return view('admin.posts._table', compact('posts'))->render(); //.render() sẽ biến View thành chuỗi HTML, chứ không trả về Response HTTP trực tiếp.
-        }
+        $posts = $query->latest('id')->get(); // 👈 KHÔNG paginate
 
         return view('admin.posts.index', compact('posts'));
     }
+
 
 
 

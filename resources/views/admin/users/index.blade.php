@@ -18,7 +18,7 @@
             </div>
         @enderror
 
-        {{-- Form tìm kiếm --}}
+        {{-- Form lọc trước khi render (nếu vẫn muốn) --}}
         <form id="searchForm" method="GET" class="row g-2 mb-3">
             <div class="col-auto">
                 <input type="text" name="name" value="{{ request('name') }}" class="form-control" placeholder="Tên">
@@ -27,12 +27,12 @@
                 <input type="text" name="email" value="{{ request('email') }}" class="form-control" placeholder="Email">
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary">Tìm kiếm</button>
+                <button class="btn btn-primary">Lọc</button>
             </div>
         </form>
 
-        {{-- Bảng + phân trang AJAX --}}
-        <div id="usersTable">
+        {{-- Bảng --}}
+        <div class="table-responsive">
             @include('admin.users._table', ['users' => $users])
         </div>
     </div>
@@ -48,33 +48,17 @@
 @endpush
 
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        // Chặn submit ➜ AJAX tìm kiếm
-        $('#searchForm').on('submit', function (e) {
-            e.preventDefault();
-            let query = $(this).serialize();
-            fetchUsers(query);
-        });
-
-        // Bấm link trang ➜ AJAX
-        $(document).on('click', '.pagination a', function (e) {
-            e.preventDefault();
-            let url = $(this).attr('href');
-            let query = url.split('?')[1];
-            fetchUsers(query);
-        });
-
-        function fetchUsers(query) {
-            $.ajax({
-                url: "{{ route('admin.users.index') }}?" + query,
-                success: function (data) {
-                    $('#usersTable').html(data);
-                },
-                error: function (err) {
-                    console.log(err);
+        $(document).ready(function () {
+            $('#usersTable').DataTable({
+                pageLength: 5,
+                lengthMenu: [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5]],
+                ordering: false,
+                searching: false,
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
                 }
             });
-        }
+        });
     </script>
 @endpush

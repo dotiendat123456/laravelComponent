@@ -15,19 +15,9 @@
         @enderror
 
         {{-- FORM TÌM KIẾM --}}
-        <form method="GET" action="{{ route('posts.index') }}" id="filterForm" class="mb-3">
-            <div class="row g-2 align-items-center">
-                <div class="col-auto">
-                    <input type="text" name="title" class="form-control" placeholder="Tìm theo tiêu đề"
-                        value="{{ request('title') }}">
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">
-                        Tìm kiếm
-                    </button>
-                </div>
-            </div>
-        </form>
+        {{-- Với DataTables, form này không cần thiết vì có search box sẵn --}}
+        {{-- Nếu vẫn muốn giữ, thì cần custom xử lý thêm, tạm thời bỏ để gọn gàng --}}
+
 
         <div class="mb-3 d-flex justify-content-between align-items-center">
             <a href="{{ route('posts.create') }}" class="btn btn-success">
@@ -47,11 +37,8 @@
         </div>
 
         <div class="table-responsive">
-            <div id="postsTable">
-                @include('posts._table', ['posts' => $posts])
-            </div>
+            @include('posts._table', ['posts' => $posts])
         </div>
-
     </div>
 @endsection
 
@@ -61,34 +48,54 @@
             table-layout: fixed;
             width: 100%;
         }
+
+        #postsTable tbody tr {
+            height: 70px;
+            /* 👈 Chiều cao hàng cố định */
+        }
+
+        #postsTable td {
+            vertical-align: middle;
+            /* 👈 Canh giữa nội dung theo chiều dọc */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Nếu muốn mô tả nhiều dòng vẫn ẩn */
+        #postsTable td .description {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            /* Số dòng tối đa */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
+
 @endpush
 
 @push('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
-        $(document).on('click', '.pagination a', function (e) {
-            e.preventDefault();
-            let url = $(this).attr('href');
-            fetchPosts(url);
-        });
-
-        $('#filterForm').on('submit', function (e) {
-            e.preventDefault();
-            let url = $(this).attr('action') + '?' + $(this).serialize();
-            fetchPosts(url);
-        });
-
-        function fetchPosts(url) {
-            $.ajax({
-                url: url,
-                success: function (data) {
-                    $('#postsTable').html(data);
-                },
-                error: function (err) {
-                    console.log(err);
+        $(document).ready(function () {
+            var table = $('#postsTable').DataTable({
+                pageLength: 5,
+                lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],//Tham số đầu: mảng số bản ghi giá trị thật.Tham số sau: mảng label hiển thị.
+                ordering: false,
+                searching: true,
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
                 }
             });
-        }
+
+            // Ghi đè: chỉ lọc Tiêu đề (ví dụ cột thứ 2 = data[2])
+            $.fn.dataTable.ext.search.push(
+                function (settings, data, dataIndex) {
+                    var searchTerm = table.search().toLowerCase();
+                    var title = data[2].toLowerCase(); // đếm từ 0 → 2 là cột Tiêu đề
+                    return title.includes(searchTerm);
+                }
+            );
+        });
     </script>
 @endpush
