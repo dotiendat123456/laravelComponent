@@ -20,33 +20,72 @@ use Illuminate\Support\Facades\Log;
 
 class PostController extends Controller
 {
-    public function index(Request $request)
+
+    public function index()
     {
-        $user = Auth::user();
-
-        // Base query
-        if ($user->isAdmin()) {
-            $query = Post::query()->with('user');
-        } else {
-            $query = $user->posts()->with('user');
-        }
-
-        // Nếu vẫn cần filter title (DataTables client-side sẽ filter tốt hơn)
-        if ($request->filled('title')) {
-            $query->where('title', 'like', "%{$request->title}%");
-        }
-
-        // Lấy toàn bộ, KHÔNG paginate
-        $posts = $query->latest()->get();
-
-        return view('posts.index', compact('posts'));
+        return view('posts.index');
     }
 
+    // API trả JSON cho DataTables server-side
+    public function data(Request $request)
+    {
+        $user = Auth::user();
+        $query = $user->posts()->with('user');
 
+        $columns = [
+            0 => 'id',
+            1 => 'title',
+            2 => 'description',
+            3 => 'publish_date',
+            4 => 'status',
+        ];
 
+        $totalData = $query->count();
+        $totalFiltered = $totalData;
 
+        $limit = intval($request->input('length'));
+        $start = intval($request->input('start'));
+        $orderColumn = $columns[$request->input('order.0.column')];
+        $orderDir = $request->input('order.0.dir');
+        $search = $request->input('search.value');
 
+        // Clone query riêng cho filter
+        $filteredQuery = clone $query;
 
+        if (!empty($search)) {
+            $filteredQuery->where(function ($q) use ($search) {
+                $q->where('title', 'LIKE', "%{$search}%")
+                    ->orWhere('description', 'LIKE', "%{$search}%");
+            });
+            $totalFiltered = $filteredQuery->count();
+        }
+
+        $posts = $filteredQuery
+            ->offset($start)
+            ->limit($limit)
+            ->orderBy($orderColumn, $orderDir)
+            ->get();
+
+        $data = [];
+        foreach ($posts as $post) {
+            $data[] = [
+                'id' => $post->id,
+                'title' => $post->title,
+                'description' => Str::limit($post->description, 50),
+                'publish_date' => $post->publish_date ? $post->publish_date->format('d/m/Y') : '-',
+                'status' => $post->status->label(),
+                // KHÔNG render HTML nữa
+                // Gửi id hoặc slug cho JS tự render
+            ];
+        }
+
+        return response()->json([
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => intval($totalData),
+            'recordsFiltered' => intval($totalFiltered),
+            'data' => $data,
+        ]);
+    }
 
     public function create()
     {
@@ -54,7 +93,6 @@ class PostController extends Controller
 
         return view('posts.create');
     }
-
 
 
 

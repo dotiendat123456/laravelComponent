@@ -22,7 +22,13 @@ class AdminPostController extends Controller
     {
         return view('admin.posts.dashboard');
     }
-    public function index(Request $request)
+
+    public function index()
+    {
+        return view('admin.posts.index');
+    }
+
+    public function data(Request $request)
     {
         $query = Post::query()->with('user');
 
@@ -36,10 +42,38 @@ class AdminPostController extends Controller
             });
         }
 
-        $posts = $query->latest('id')->get(); // 👈 KHÔNG paginate
+        $totalData = Post::count();
+        $totalFiltered = $query->count();
 
-        return view('admin.posts.index', compact('posts'));
+        $limit = intval($request->input('length'));
+        $start = intval($request->input('start'));
+
+        $posts = $query
+            ->offset($start)
+            ->limit($limit)
+            ->latest('id')
+            ->get();
+
+        $data = [];
+        foreach ($posts as $post) {
+            $data[] = [
+                'id' => $post->id,
+                'title' => $post->title,
+                'email' => $post->user->email,
+                'status' => $post->status->label(),
+                'created_at' => $post->created_at->format('d/m/Y'),
+                'slug' => $post->slug,
+            ];
+        }
+
+        return response()->json([
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => $totalData,
+            'recordsFiltered' => $totalFiltered,
+            'data' => $data,
+        ]);
     }
+
 
 
 

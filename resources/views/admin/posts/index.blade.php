@@ -14,90 +14,139 @@
             </div>
         @enderror
 
-        <!-- FORM TÌM KIẾM (nếu vẫn muốn filter trước khi render) -->
-        <form id="searchForm" class="row g-3 mb-3" method="GET" action="{{ route('admin.posts.index') }}">
+        <!-- FORM TÌM KIẾM -->
+        <form id="searchForm" class="row g-3 mb-3">
             <div class="col-auto">
-                <input type="text" name="title" value="{{ request('title') }}" class="form-control"
-                    placeholder="Tìm theo tiêu đề">
+                <input type="text" name="title" class="form-control" placeholder="Tìm theo tiêu đề">
             </div>
             <div class="col-auto">
-                <input type="text" name="email" value="{{ request('email') }}" class="form-control"
-                    placeholder="Tìm theo email user">
+                <input type="text" name="email" class="form-control" placeholder="Tìm theo email user">
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary">Lọc</button>
             </div>
         </form>
 
-        <!-- NÚT TẠO MỚI & XÓA TẤT CẢ -->
+        <!-- TẠO MỚI & XÓA TẤT CẢ -->
         <div class="mb-3 d-flex justify-content-between">
             <a href="{{ route('admin.posts.create') }}" class="btn btn-success">
                 <i class="fa-solid fa-plus"></i> Tạo mới
             </a>
 
-            @if ($posts->count())
-                <form action="{{ route('admin.posts.destroyAll') }}" method="POST"
-                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa tất cả bài viết?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-outline-danger">
-                        <i class="fa-solid fa-trash"></i> Xóa tất cả
-                    </button>
-                </form>
-            @endif
+            <button type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
+                <i class="fa-solid fa-trash"></i> Xóa tất cả
+            </button>
         </div>
 
         <!-- BẢNG -->
         <div class="table-responsive">
-            @include('admin.posts._table', ['posts' => $posts])
+            <table id="postsTable" class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tiêu đề</th>
+                        <th>Email User</th>
+                        <th>Trạng thái</th>
+                        <th>Ngày tạo</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
 @endsection
 
-@push('styles')
-    <style>
-        .table-fixed {
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        #postsTable tbody tr {
-            height: 70px;
-            /* 👈 Chiều cao hàng cố định */
-        }
-
-        #postsTable td {
-            vertical-align: middle;
-            /* 👈 Canh giữa nội dung theo chiều dọc */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* Nếu muốn mô tả nhiều dòng vẫn ẩn */
-        #postsTable td .description {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            /* Số dòng tối đa */
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    </style>
-@endpush
-
 @push('scripts')
     <script>
+        let table;
+
         $(document).ready(function () {
-            $('#postsTable').DataTable({
-                pageLength: 5, // Hiển thị 5 dòng mặc định
-                lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],
+            table = $('#postsTable').DataTable({
+                processing: true,
+                serverSide: true,
                 ordering: false,
                 searching: false,
+                pageLength: 3,
+                lengthMenu: [[3, 5, 10, 25, 50], [3, 5, 10, 25, 50]],
+                ajax: {
+                    url: '{{ route('admin.posts.data') }}',
+                    data: function (d) {
+                        d.title = $('input[name=title]').val();
+                        d.email = $('input[name=email]').val();
+                    }
+                },
+                columns: [
+                    { data: 'id' },
+                    { data: 'title' },
+                    { data: 'email' },
+                    { data: 'status' },
+                    { data: 'created_at' },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row) {
+                            return `
+                                            <a href="/news/${row.slug}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                            <a href="/admin/posts/${row.id}/edit" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                                <i class="fa-solid fa-edit"></i>
+                                            </a>
+                                            <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        `;
+                        }
+                    }
+                ],
                 language: {
                     url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
                 }
             });
+
+            $('#searchForm').on('submit', function (e) {
+                e.preventDefault();
+                table.ajax.reload();
+            });
         });
+
+        function deletePost(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+                $.ajax({
+                    url: `/admin/posts/${id}`,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function () {
+                        table.ajax.reload();
+                    },
+                    error: function () {
+                        alert('Xóa thất bại!');
+                    }
+                });
+            }
+        }
+
+        function deleteAllPosts() {
+            if (confirm('Bạn có chắc chắn muốn xóa tất cả bài viết?')) {
+                $.ajax({
+                    url: `{{ route('admin.posts.destroyAll') }}`,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function () {
+                        table.ajax.reload();
+                    },
+                    error: function () {
+                        alert('Xóa tất cả thất bại!');
+                    }
+                });
+            }
+        }
     </script>
 @endpush

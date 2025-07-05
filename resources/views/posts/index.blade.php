@@ -2,100 +2,116 @@
 
 @section('content')
     <div class="container">
-        <h3>Danh sách bài viết</h3>
-
-        @if (session('success'))
-            <x-alert-success :message="session('success')" />
-        @endif
-
-        @error('error')
-            <div class="alert alert-danger" role="alert">
-                {{ $message }}
-            </div>
-        @enderror
-
-        {{-- FORM TÌM KIẾM --}}
-        {{-- Với DataTables, form này không cần thiết vì có search box sẵn --}}
-        {{-- Nếu vẫn muốn giữ, thì cần custom xử lý thêm, tạm thời bỏ để gọn gàng --}}
-
+        <h3>Danh sách Bài viết</h3>
 
         <div class="mb-3 d-flex justify-content-between align-items-center">
             <a href="{{ route('posts.create') }}" class="btn btn-success">
                 <i class="bi bi-plus"></i> Tạo mới
             </a>
 
-            @if($posts->count())
-                <form action="{{ route('posts.destroyAll') }}" method="POST"
-                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa tất cả bài viết?')">
-                    @csrf
-                    @method('DELETE')
-                    <button class="btn btn-outline-danger">
-                        <i class="bi bi-trash"></i> Xóa tất cả
-                    </button>
-                </form>
-            @endif
+            {{-- <form action="{{ route('posts.destroyAll') }}" method="POST"
+                onsubmit="return confirm('Bạn có chắc chắn muốn xóa tất cả bài viết?')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Xóa tất cả
+                </button>
+            </form> --}}
+            <button type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
+                <i class="bi bi-trash"></i> Xóa tất cả
+            </button>
+
         </div>
 
         <div class="table-responsive">
-            @include('posts._table', ['posts' => $posts])
+            <table id="postsTable" class="table table-striped table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tiêu đề</th>
+                        <th>Mô tả</th>
+                        <th>Ngày đăng</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
 @endsection
 
-@push('styles')
-    <style>
-        .table-fixed {
-            table-layout: fixed;
-            width: 100%;
-        }
-
-        #postsTable tbody tr {
-            height: 70px;
-            /* 👈 Chiều cao hàng cố định */
-        }
-
-        #postsTable td {
-            vertical-align: middle;
-            /* 👈 Canh giữa nội dung theo chiều dọc */
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* Nếu muốn mô tả nhiều dòng vẫn ẩn */
-        #postsTable td .description {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            /* Số dòng tối đa */
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-    </style>
-
-@endpush
-
 @push('scripts')
     <script>
-        $(document).ready(function () {
-            var table = $('#postsTable').DataTable({
-                pageLength: 5,
-                lengthMenu: [[5, 10, 25, 50, 100], [5, 10, 25, 50, 100]],//Tham số đầu: mảng số bản ghi giá trị thật.Tham số sau: mảng label hiển thị.
-                ordering: false,
-                searching: true,
-                language: {
-                    url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
+        new DataTable('#postsTable', {
+            processing: true,
+            serverSide: true,
+            searching: true,
+            pageLength: 3,
+            lengthMenu: [[3, 5, 10, 25, 50], [3, 5, 10, 25, 50]],
+            ajax: '{{ route('posts.data') }}',
+            columns: [
+                { data: 'id', name: 'id' },
+                { data: 'title', name: 'title' },
+                { data: 'description', name: 'description' },
+                { data: 'publish_date', name: 'publish_date' },
+                { data: 'status', name: 'status' },
+                {
+                    render: function (data, type, row) {
+                        return `
+                                                                            <a href="/posts/${row.id}" class="btn btn-sm btn-outline-info p-1">
+                                                                                <i class="fa-solid fa-eye"></i>
+                                                                            </a>
+                                                                            <a href="/posts/${row.id}/edit" class="btn btn-sm btn-outline-warning p-1">
+                                                                                <i class="fa-solid fa-edit"></i>
+                                                                            </a>
+                                                                            <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1">
+                                                                                <i class="fa-solid fa-trash"></i>
+                                                                            </button>
+                                                                        `;
+                    }
                 }
-            });
-
-            // Ghi đè: chỉ lọc Tiêu đề (ví dụ cột thứ 2 = data[2])
-            $.fn.dataTable.ext.search.push(
-                function (settings, data, dataIndex) {
-                    var searchTerm = table.search().toLowerCase();
-                    var title = data[2].toLowerCase(); // đếm từ 0 → 2 là cột Tiêu đề
-                    return title.includes(searchTerm);
-                }
-            );
+            ],
+            language: {
+                url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
+            }
         });
+
+        function deletePost(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa?')) {
+                $.ajax({
+                    url: `/posts/${id}`,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function () {
+                        $('#postsTable').DataTable().ajax.reload();
+                    },
+                    error: function () {
+                        alert('Xóa thất bại!');
+                    }
+                });
+            }
+        }
+        function deleteAllPosts() {
+            if (confirm('Bạn có chắc chắn muốn xóa tất cả bài viết?')) {
+                $.ajax({
+                    url: `{{ route('posts.destroyAll') }}`,
+                    type: 'POST',
+                    data: {
+                        _method: 'DELETE',
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function () {
+                        $('#postsTable').DataTable().ajax.reload();
+                    },
+                    error: function () {
+                        alert('Xóa tất cả thất bại!');
+                    }
+                });
+            }
+        }
+
     </script>
 @endpush

@@ -28,6 +28,7 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     Route::post('/profile', [ProfileController::class, 'update'])->name('profile.update');
     // CRUD Posts - TRUYỀN THỐNG, tránh lỗi name
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+    Route::get('/posts/data', [PostController::class, 'data'])->name('posts.data');
     Route::get('/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/posts/{post}', [PostController::class, 'show'])->name('posts.show');
@@ -44,6 +45,8 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'check.user.status'])->grou
     // Admin quản lý bài viết
     Route::get('/', [AdminPostController::class, 'dashboard'])->name('admin.posts.dashboard');
     Route::get('/posts', [AdminPostController::class, 'index'])->name('admin.posts.index');
+    Route::get('/posts/data', [AdminPostController::class, 'data'])->name('admin.posts.data');
+
     Route::get('/posts/create', [AdminPostController::class, 'create'])->name('admin.posts.create');
     Route::post('/posts', [AdminPostController::class, 'store'])->name('admin.posts.store');
     Route::get('/posts/{post}', [AdminPostController::class, 'show'])->name('admin.posts.show');
@@ -54,6 +57,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'check.user.status'])->grou
 
     //Admin quản lý User
     Route::get('/users', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/data', [AdminUserController::class, 'data'])->name('admin.users.data');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
 });

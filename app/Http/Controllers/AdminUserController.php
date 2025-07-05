@@ -7,10 +7,16 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Enums\UserStatus;
 
 class AdminUserController extends Controller
 {
-    public function index(Request $request)
+    public function index()
+    {
+        return view('admin.users.index');
+    }
+
+    public function data(Request $request)
     {
         $query = User::query();
 
@@ -22,10 +28,45 @@ class AdminUserController extends Controller
             $query->where('email', 'like', "%{$request->email}%");
         }
 
-        $users = $query->latest()->get(); // ✅ KHÔNG paginate nữa
+        $totalData = User::count();
+        $totalFiltered = $query->count();
 
-        return view('admin.users.index', compact('users'));
+        $limit = intval($request->input('length'));
+        $start = intval($request->input('start'));
+
+        $users = $query
+            ->offset($start)
+            ->limit($limit)
+            ->latest()
+            ->get();
+
+        $data = [];
+        foreach ($users as $user) {
+            $statusLabel = match ($user->status) {
+                UserStatus::PENDING => '<span class="badge bg-secondary">' . $user->status->label() . '</span>',
+                UserStatus::APPROVED => '<span class="badge bg-success">' . $user->status->label() . '</span>',
+                UserStatus::REJECTED => '<span class="badge bg-danger">' . $user->status->label() . '</span>',
+                UserStatus::LOCKED => '<span class="badge bg-dark">' . $user->status->label() . '</span>',
+                default => '<span class="badge bg-light">Không rõ</span>',
+            };
+
+            $data[] = [
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'email' => $user->email,
+                'address' => $user->address,
+                'status' => $statusLabel,
+                'id' => $user->id,
+            ];
+        }
+
+        return response()->json([
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => $totalData,
+            'recordsFiltered' => $totalFiltered,
+            'data' => $data,
+        ]);
     }
+
 
 
 

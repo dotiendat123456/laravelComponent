@@ -9,6 +9,8 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Enums\UserRole;
 use App\Enums\PostStatus;
+use App\Observers\PostObserver;
+
 
 class Post extends Model implements HasMedia
 {
@@ -46,4 +48,11 @@ class Post extends Model implements HasMedia
         'publish_date' => 'datetime',
         'status' => PostStatus::class,
     ];
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::observe(PostObserver::class);
+    }
 }

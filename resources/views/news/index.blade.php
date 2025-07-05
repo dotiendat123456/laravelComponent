@@ -19,7 +19,7 @@
                 </div>
                 <div class="col-md-8">
                     <h5 class="news-title">
-                        <a href="{{ route('news.show', $post->slug) }}" class="text-dark fw-bold">
+                        <a href="{{ route('news.show', $post) }}" class="text-dark fw-bold">
                             {{ $post->title }}
                         </a>
                     </h5>

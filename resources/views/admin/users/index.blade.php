@@ -18,22 +18,32 @@
             </div>
         @enderror
 
-        {{-- Form lọc trước khi render (nếu vẫn muốn) --}}
+        {{-- FORM TÌM KIẾM --}}
         <form id="searchForm" method="GET" class="row g-2 mb-3">
             <div class="col-auto">
-                <input type="text" name="name" value="{{ request('name') }}" class="form-control" placeholder="Tên">
+                <input type="text" name="name" class="form-control" placeholder="Tên">
             </div>
             <div class="col-auto">
-                <input type="text" name="email" value="{{ request('email') }}" class="form-control" placeholder="Email">
+                <input type="text" name="email" class="form-control" placeholder="Email">
             </div>
             <div class="col-auto">
-                <button class="btn btn-primary">Lọc</button>
+                <button type="submit" class="btn btn-primary">Lọc</button>
             </div>
         </form>
 
-        {{-- Bảng --}}
+        {{-- BẢNG --}}
         <div class="table-responsive">
-            @include('admin.users._table', ['users' => $users])
+            <table id="usersTable" class="table table-striped table-hover align-middle table-fixed">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 20%;">Tên</th>
+                        <th style="width: 20%;">Email</th>
+                        <th style="width: 30%;">Địa chỉ</th>
+                        <th style="width: 15%;">Trạng thái</th>
+                        <th style="width: 15%;">Hành động</th>
+                    </tr>
+                </thead>
+            </table>
         </div>
     </div>
 @endsection
@@ -49,15 +59,49 @@
 
 @push('scripts')
     <script>
+        let table;
+
         $(document).ready(function () {
-            $('#usersTable').DataTable({
-                pageLength: 5,
-                lengthMenu: [[1, 2, 3, 4, 5], [1, 2, 3, 4, 5]],
+            table = $('#usersTable').DataTable({
+                processing: true,
+                serverSide: true,
                 ordering: false,
                 searching: false,
+                pageLength: 1,
+                lengthMenu: [[1, 3, 5, 10, 15], [1, 3, 5, 10, 15]],
+                ajax: {
+                    url: '{{ route('admin.users.data') }}',
+                    data: function (d) {
+                        d.name = $('input[name=name]').val();
+                        d.email = $('input[name=email]').val();
+                    }
+                },
+                columns: [
+                    { data: 'name' },
+                    { data: 'email' },
+                    { data: 'address' },
+                    { data: 'status' },
+                    {
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row) {
+                            return `
+                                        <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning">
+                                            <i class="fa-solid fa-edit"></i> Sửa
+                                        </a>
+                                    `;
+                        }
+                    }
+                ],
                 language: {
                     url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
                 }
+            });
+
+            $('#searchForm').on('submit', function (e) {
+                e.preventDefault();
+                table.ajax.reload();
             });
         });
     </script>
