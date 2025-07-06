@@ -14,7 +14,7 @@ use App\Enums\UserRole;
 use App\Jobs\NotifyUserPostStatusJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
+use App\Enums\PostStatus;
 
 class AdminPostController extends Controller
 {
@@ -110,6 +110,7 @@ class AdminPostController extends Controller
                 'description' => $request->description,
                 'content' => $request->content,
                 'publish_date' => $request->publish_date,
+                'status' => PostStatus::APPROVED,
             ]);
 
             // Nếu có thumbnail thì lưu bằng Spatie Media
