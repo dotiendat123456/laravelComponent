@@ -59,50 +59,64 @@
 
 @push('scripts')
     <script>
+        // Khai báo biến table để lưu instance DataTable
         let table;
 
+        // Khi tài liệu HTML tải xong, khởi tạo DataTable
         $(document).ready(function () {
+            // Khởi tạo DataTable cho bảng #usersTable
             table = $('#usersTable').DataTable({
-                processing: true,
-                serverSide: true,
-                ordering: false,
-                searching: false,
-                pageLength: 1,
-                lengthMenu: [[1, 3, 5, 10, 15], [1, 3, 5, 10, 15]],
+                processing: true,   // Hiển thị trạng thái loading
+                serverSide: true,   // Bật chế độ server-side: phân trang, lọc do server xử lý
+                ordering: false,    // KHÓA sắp xếp, vì controller chỉ sắp latest('id')
+                searching: false,   // Tắt search mặc định, dùng form ngoài
+                pageLength: 5,      // Số dòng mặc định trên 1 trang
+                lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+
+                // Cấu hình ajax gọi tới route Laravel
                 ajax: {
                     url: '{{ route('admin.users.data') }}',
                     data: function (d) {
+                        // Lấy giá trị input form filter
                         d.name = $('input[name=name]').val();
                         d.email = $('input[name=email]').val();
                     }
                 },
+
+                // Cấu hình các cột dữ liệu khớp với controller
                 columns: [
-                    { data: 'name' },
-                    { data: 'email' },
-                    { data: 'address' },
-                    { data: 'status' },
+                    { data: 'name' },    // Tên đầy đủ user
+                    { data: 'email' },   // Email user
+                    { data: 'address' }, // Địa chỉ
+                    { data: 'status' },  // Trạng thái (badge HTML)
+
+                    // Cột nút thao tác (Sửa)
                     {
                         data: null,
                         orderable: false,
                         searchable: false,
                         render: function (data, type, row) {
                             return `
-                                        <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning">
-                                            <i class="fa-solid fa-edit"></i> Sửa
-                                        </a>
-                                    `;
+                                    <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                        <i class="fa-solid fa-edit"></i> Sửa
+                                    </a>
+                                `;
                         }
                     }
                 ],
+
+                // Ngôn ngữ Tiếng Việt
                 language: {
                     url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
                 }
             });
 
+            // Bắt sự kiện submit form filter, reload DataTable với dữ liệu mới
             $('#searchForm').on('submit', function (e) {
                 e.preventDefault();
                 table.ajax.reload();
             });
         });
     </script>
+
 @endpush

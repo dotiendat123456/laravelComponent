@@ -26,66 +26,89 @@ class PostController extends Controller
         return view('posts.index');
     }
 
+
+
     // API trả JSON cho DataTables server-side
     public function data(Request $request)
     {
+        // Lấy user đang đăng nhập
         $user = Auth::user();
+
+        // Tạo query chỉ lấy bài viết của user, kèm quan hệ user
         $query = $user->posts()->with('user');
 
+        // Nếu có tham số 'title' gửi lên, thêm điều kiện tìm kiếm tiêu đề
+        if ($request->filled('title')) {
+            $query->where('title', 'like', "%{$request->title}%");
+        }
+
+        // Nếu có tham số 'email' gửi lên, thêm điều kiện tìm kiếm theo email user (ít dùng, nhưng giữ đồng bộ)
+        if ($request->filled('email')) {
+            $query->whereHas('user', function ($q) use ($request) {
+                $q->where('email', 'like', "%{$request->email}%");
+            });
+        }
+
+        // Đếm tổng số bài viết của user không filter
+        $totalData = $user->posts()->count();
+
+        // Đếm tổng số bài viết sau filter
+        $totalFiltered = $query->count();
+
+        // Lấy limit và offset phân trang
+        $limit = intval($request->input('length'));
+        $start = intval($request->input('start'));
+
+        // Ánh xạ cột: giống bên Admin để đồng bộ
         $columns = [
             0 => 'id',
             1 => 'title',
-            2 => 'description',
-            3 => 'publish_date',
-            4 => 'status',
+            2 => 'users.email',
+            3 => 'status',
+            4 => 'created_at',
         ];
 
-        $totalData = $query->count();
-        $totalFiltered = $totalData;
-
-        $limit = intval($request->input('length'));
-        $start = intval($request->input('start'));
-        $orderColumn = $columns[$request->input('order.0.column')];
+        $orderColIndex = $request->input('order.0.column');
         $orderDir = $request->input('order.0.dir');
-        $search = $request->input('search.value');
 
-        // Clone query riêng cho filter
-        $filteredQuery = clone $query;
+        $orderColumn = $columns[$orderColIndex] ?? 'id';
 
-        if (!empty($search)) {
-            $filteredQuery->where(function ($q) use ($search) {
-                $q->where('title', 'LIKE', "%{$search}%")
-                    ->orWhere('description', 'LIKE', "%{$search}%");
-            });
-            $totalFiltered = $filteredQuery->count();
+        // Nếu sắp xếp theo email thì join bảng users
+        if ($orderColumn === 'users.email') {
+            $query->join('users', 'posts.user_id', '=', 'users.id')
+                ->orderBy('users.email', $orderDir)
+                ->select('posts.*');
+        } else {
+            $query->orderBy($orderColumn, $orderDir);
         }
 
-        $posts = $filteredQuery
-            ->offset($start)
-            ->limit($limit)
-            ->orderBy($orderColumn, $orderDir)
-            ->get();
+        // Áp dụng phân trang
+        $posts = $query->offset($start)->limit($limit)->get();
 
+        // Build dữ liệu trả về
         $data = [];
         foreach ($posts as $post) {
             $data[] = [
                 'id' => $post->id,
                 'title' => $post->title,
-                'description' => Str::limit($post->description, 50),
-                'publish_date' => $post->publish_date ? $post->publish_date->format('d/m/Y') : '-',
+                'email' => $post->user->email ?? '-',
                 'status' => $post->status->label(),
-                // KHÔNG render HTML nữa
-                // Gửi id hoặc slug cho JS tự render
+                'created_at' => $post->created_at->format('d/m/Y'),
+                'slug' => $post->slug,
             ];
         }
 
+        // Trả JSON DataTables
         return response()->json([
             'draw' => intval($request->input('draw')),
-            'recordsTotal' => intval($totalData),
-            'recordsFiltered' => intval($totalFiltered),
+            'recordsTotal' => $totalData,
+            'recordsFiltered' => $totalFiltered,
             'data' => $data,
         ]);
     }
+
+
+
 
     public function create()
     {
@@ -93,6 +116,7 @@ class PostController extends Controller
 
         return view('posts.create');
     }
+
 
 
 
@@ -138,6 +162,7 @@ class PostController extends Controller
         //
     }
 
+
     public function publicIndex()
     {
         $posts = Post::where('status', PostStatus::APPROVED->value)
@@ -147,6 +172,7 @@ class PostController extends Controller
 
         return view('news.index', compact('posts'));
     }
+
 
 
     public function publicShow(Post $post)
@@ -164,14 +190,13 @@ class PostController extends Controller
 
 
 
+
     public function edit(Post $post)
     {
         $this->authorize('update', $post);
 
         return view('posts.edit', compact('post'));
     }
-
-
 
 
 

@@ -18,30 +18,55 @@ class AdminUserController extends Controller
 
     public function data(Request $request)
     {
+        // Tạo query lấy tất cả user
         $query = User::query();
 
+        // Nếu request có trường 'name', lọc theo CONCAT(first_name last_name)
         if ($request->filled('name')) {
-            $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ['%' . $request->name . '%']);
+            $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$request->name}%"]);
         }
 
+        // Nếu request có trường 'email', lọc theo email
         if ($request->filled('email')) {
             $query->where('email', 'like', "%{$request->email}%");
         }
 
+        // Đếm tổng số user trong bảng (không áp dụng filter)
         $totalData = User::count();
+
+        // Đếm tổng số user sau khi filter (nếu có)
         $totalFiltered = $query->count();
 
+        // Lấy limit (số dòng trên 1 trang) từ DataTables
         $limit = intval($request->input('length'));
+
+        // Lấy offset (bắt đầu từ dòng thứ mấy)
         $start = intval($request->input('start'));
 
+        // Ánh xạ cột nếu cần sắp xếp động sau này (hiện tại vẫn khóa latest)
+        $columns = [
+            0 => 'first_name',
+            1 => 'email',
+            2 => 'address',
+            3 => 'status',
+        ];
+
+        // Nếu bạn muốn cho phép sắp xếp, bạn sẽ lấy:
+        // $orderColIndex = $request->input('order.0.column');
+        // $orderDir = $request->input('order.0.dir');
+        // và $query->orderBy($columns[$orderColIndex], $orderDir)
+
+        // Ở đây: ta KHÓA sắp xếp latest theo id mới nhất
         $users = $query
             ->offset($start)
             ->limit($limit)
-            ->latest()
+            ->latest('id')
             ->get();
 
+        // Tạo mảng dữ liệu trả về
         $data = [];
         foreach ($users as $user) {
+            // Tạo badge status dạng HTML
             $statusLabel = match ($user->status) {
                 UserStatus::PENDING => '<span class="badge bg-secondary">' . $user->status->label() . '</span>',
                 UserStatus::APPROVED => '<span class="badge bg-success">' . $user->status->label() . '</span>',
@@ -51,21 +76,23 @@ class AdminUserController extends Controller
             };
 
             $data[] = [
-                'name' => $user->first_name . ' ' . $user->last_name,
-                'email' => $user->email,
-                'address' => $user->address,
-                'status' => $statusLabel,
-                'id' => $user->id,
+                'name' => $user->first_name . ' ' . $user->last_name, // Tên đầy đủ
+                'email' => $user->email,                              // Email
+                'address' => $user->address,                          // Địa chỉ
+                'status' => $statusLabel,                             // HTML badge trạng thái
+                'id' => $user->id,                                    // ID cho nút sửa
             ];
         }
 
+        // Trả về JSON chuẩn DataTables yêu cầu
         return response()->json([
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => $totalData,
-            'recordsFiltered' => $totalFiltered,
-            'data' => $data,
+            'draw' => intval($request->input('draw')), // Số lần request DataTables
+            'recordsTotal' => $totalData,              // Tổng số user gốc
+            'recordsFiltered' => $totalFiltered,       // Tổng số user sau filter
+            'data' => $data,                           // Mảng dữ liệu trang hiện tại
         ]);
     }
+
 
 
 

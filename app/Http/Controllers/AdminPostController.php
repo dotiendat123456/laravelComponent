@@ -23,58 +23,91 @@ class AdminPostController extends Controller
         return view('admin.posts.dashboard');
     }
 
+
     public function index()
     {
         return view('admin.posts.index');
     }
 
+
     public function data(Request $request)
     {
+        // Tạo query gốc lấy tất cả bài viết, kèm theo quan hệ user (tác giả)
         $query = Post::query()->with('user');
 
+        // Nếu có tham số 'title' gửi lên, thêm điều kiện tìm kiếm theo tiêu đề bài viết
         if ($request->filled('title')) {
             $query->where('title', 'like', "%{$request->title}%");
         }
 
+        // Nếu có tham số 'email' gửi lên, thêm điều kiện tìm kiếm theo email user
         if ($request->filled('email')) {
             $query->whereHas('user', function ($q) use ($request) {
                 $q->where('email', 'like', "%{$request->email}%");
             });
         }
 
+        // Đếm tổng số bài viết gốc (không filter)
         $totalData = Post::count();
+
+        // Đếm tổng số bài viết sau khi áp dụng filter
         $totalFiltered = $query->count();
 
+        // Lấy số bản ghi hiển thị mỗi trang (limit) từ request
         $limit = intval($request->input('length'));
+
+        // Lấy vị trí offset bắt đầu lấy dữ liệu
         $start = intval($request->input('start'));
 
-        $posts = $query
-            ->offset($start)
-            ->limit($limit)
-            ->latest('id')
-            ->get();
+        // Định nghĩa ánh xạ cột giữa vị trí index DataTables và tên cột DB
+        $columns = [
+            0 => 'id',
+            1 => 'title',
+            2 => 'users.email', // email không nằm trực tiếp ở bảng posts, phải join users
+            3 => 'status',
+            4 => 'created_at',
+        ];
 
+        // Lấy index cột sắp xếp và chiều sắp xếp từ request DataTables
+        $orderColIndex = $request->input('order.0.column');
+        $orderDir = $request->input('order.0.dir');
+
+        // Xác định tên cột cần sắp xếp
+        $orderColumn = $columns[$orderColIndex] ?? 'id';
+
+        // Nếu sắp xếp theo email → cần join bảng users để orderBy qua quan hệ
+        if ($orderColumn === 'users.email') {
+            $query->join('users', 'posts.user_id', '=', 'users.id')
+                ->orderBy('users.email', $orderDir)
+                ->select('posts.*'); // Chọn lại cột posts.* để tránh xung đột
+        } else {
+            $query->orderBy($orderColumn, $orderDir);
+        }
+
+        // Áp dụng offset, limit để phân trang
+        $posts = $query->offset($start)->limit($limit)->get();
+
+        // Tạo mảng dữ liệu chuẩn trả về cho DataTables
         $data = [];
         foreach ($posts as $post) {
             $data[] = [
-                'id' => $post->id,
-                'title' => $post->title,
-                'email' => $post->user->email,
-                'status' => $post->status->label(),
-                'created_at' => $post->created_at->format('d/m/Y'),
-                'slug' => $post->slug,
+                'id' => $post->id, // ID bài viết
+                'title' => $post->title, // Tiêu đề bài viết
+                'email' => $post->user->email ?? '-', // Email tác giả
+                'status' => $post->status->label(), // Trạng thái bài viết (dạng text)
+                'created_at' => $post->created_at->format('d/m/Y'), // Ngày tạo
+                'slug' => $post->slug, // Slug để xem chi tiết
             ];
         }
 
+        // Trả JSON đúng chuẩn DataTables yêu cầu
         return response()->json([
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => $totalData,
-            'recordsFiltered' => $totalFiltered,
-            'data' => $data,
+            'draw' => intval($request->input('draw')), // Số lần request (bắt buộc)
+            'recordsTotal' => $totalData, // Tổng bản ghi gốc (chưa filter)
+            'recordsFiltered' => $totalFiltered, // Tổng bản ghi sau filter
+            'data' => $data, // Mảng dữ liệu trang hiện tại
         ]);
     }
-
-
 
 
 
