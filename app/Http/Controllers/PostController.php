@@ -31,81 +31,75 @@ class PostController extends Controller
     // API trả JSON cho DataTables server-side
     public function data(Request $request)
     {
-        // Lấy user đang đăng nhập
         $user = Auth::user();
+        $query = $user->posts(); // Query gốc: chỉ lấy bài viết thuộc user đang đăng nhập
 
-        // Tạo query chỉ lấy bài viết của user, kèm quan hệ user
-        $query = $user->posts()->with('user');
-
-        // Nếu có tham số 'title' gửi lên, thêm điều kiện tìm kiếm tiêu đề
-        if ($request->filled('title')) {
-            $query->where('title', 'like', "%{$request->title}%");
-        }
-
-        // Nếu có tham số 'email' gửi lên, thêm điều kiện tìm kiếm theo email user (ít dùng, nhưng giữ đồng bộ)
-        if ($request->filled('email')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('email', 'like', "%{$request->email}%");
+        // Tìm kiếm toàn bảng (search box DataTables)
+        if ($request->filled('search.value')) {
+            $search = $request->input('search.value');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
-        // Đếm tổng số bài viết của user không filter
-        $totalData = $user->posts()->count();
+        $totalData = $user->posts()->count();   // Tổng số bản ghi gốc (chưa filter)
+        $totalFiltered = $query->count();       // Tổng số bản ghi sau filter
 
-        // Đếm tổng số bài viết sau filter
-        $totalFiltered = $query->count();
+        $limit = intval($request->input('length')); // Số bản ghi/trang do DataTables gửi lên
+        $start = intval($request->input('start'));  // Vị trí bắt đầu lấy (offset)
 
-        // Lấy limit và offset phân trang
-        $limit = intval($request->input('length'));
-        $start = intval($request->input('start'));
-
-        // Ánh xạ cột: giống bên Admin để đồng bộ
+        // Thứ tự cột phải khớp với mảng columns bên DataTables JS
         $columns = [
-            0 => 'id',
-            1 => 'title',
-            2 => 'users.email',
-            3 => 'status',
-            4 => 'created_at',
+            0 => 'id',          // Cột ID
+            1 => 'thumbnail',   // Thumbnail (placeholder, không sort)
+            2 => 'title',       // Tiêu đề
+            3 => 'description', // Mô tả
+            4 => 'publish_date', // Ngày đăng
+            5 => 'status',      // Trạng thái
         ];
 
-        $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir');
+        $orderColIndex = $request->input('order.0.column'); // Cột được chọn sort
+        $orderDir = $request->input('order.0.dir');         // Hướng sắp xếp: asc|desc
 
-        $orderColumn = $columns[$orderColIndex] ?? 'id';
-
-        // Nếu sắp xếp theo email thì join bảng users
-        if ($orderColumn === 'users.email') {
-            $query->join('users', 'posts.user_id', '=', 'users.id')
-                ->orderBy('users.email', $orderDir)
-                ->select('posts.*');
+        // Nếu không có cột hoặc cột là thumbnail thì fallback sắp theo ID mới nhất
+        if (
+            $orderColIndex === null ||
+            !isset($columns[$orderColIndex]) ||
+            $columns[$orderColIndex] === 'thumbnail'
+        ) {
+            $query->orderByDesc('id');
         } else {
-            $query->orderBy($orderColumn, $orderDir);
+            $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        // Áp dụng phân trang
+        // Lấy dữ liệu trang hiện tại
         $posts = $query->offset($start)->limit($limit)->get();
 
-        // Build dữ liệu trả về
         $data = [];
         foreach ($posts as $post) {
+            $thumbnailUrl = $post->getFirstMediaUrl('thumbnails'); // Lấy URL thumbnail từ Spatie
+
             $data[] = [
                 'id' => $post->id,
-                'title' => $post->title,
-                'email' => $post->user->email ?? '-',
-                'status' => $post->status->label(),
-                'created_at' => $post->created_at->format('d/m/Y'),
                 'slug' => $post->slug,
+                'thumbnail' => $thumbnailUrl,
+                'title' => $post->title,
+                'description' => Str::limit($post->description, 50), // Rút gọn mô tả 50 ký tự
+                'publish_date' => optional($post->publish_date)->format('d/m/Y'),
+                'status' => $post->status->label(),
             ];
         }
 
-        // Trả JSON DataTables
+        // Trả JSON chuẩn cấu trúc DataTables yêu cầu
         return response()->json([
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => $totalData,
-            'recordsFiltered' => $totalFiltered,
-            'data' => $data,
+            'draw' => intval($request->input('draw')),      // Tham số để DataTables kiểm tra thứ tự gọi Ajax
+            'recordsTotal' => $totalData,                   // Tổng bản ghi gốc
+            'recordsFiltered' => $totalFiltered,            // Tổng bản ghi sau filter
+            'data' => $data,                                // Dữ liệu chính
         ]);
     }
+
 
 
 
@@ -116,7 +110,6 @@ class PostController extends Controller
 
         return view('posts.create');
     }
-
 
 
 

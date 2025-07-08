@@ -9,18 +9,9 @@
                 <i class="bi bi-plus"></i> Tạo mới
             </a>
 
-            {{-- <form action="{{ route('posts.destroyAll') }}" method="POST"
-                onsubmit="return confirm('Bạn có chắc chắn muốn xóa tất cả bài viết?')">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-trash"></i> Xóa tất cả
-                </button>
-            </form> --}}
             <button type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
                 <i class="bi bi-trash"></i> Xóa tất cả
             </button>
-
         </div>
 
         <div class="table-responsive">
@@ -28,6 +19,7 @@
                 <thead class="table-light">
                     <tr>
                         <th>ID</th>
+                        <th>Thumbnail</th>
                         <th>Tiêu đề</th>
                         <th>Mô tả</th>
                         <th>Ngày đăng</th>
@@ -42,105 +34,79 @@
 
 @push('scripts')
     <script>
-        // Biến table để lưu instance DataTable, có thể tái sử dụng (reload, redraw)
         let table;
 
-        // Khi tài liệu HTML tải xong, khởi tạo DataTable
         $(document).ready(function () {
-            // Gọi DataTable cho bảng có ID #postsTable
             table = $('#postsTable').DataTable({
-                processing: true,   // Hiển thị trạng thái "Đang xử lý..." khi load dữ liệu
-                serverSide: true,   // Bật chế độ server-side: phân trang, sắp xếp, filter do server xử lý
-                ordering: true,     // Cho phép sắp xếp các cột (vì controller hỗ trợ orderBy)
-                searching: true,    // Bật search toàn bảng mặc định (nếu không dùng form filter riêng)
-                pageLength: 5,      // Số dòng hiển thị mặc định mỗi trang
-                lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]], // Tùy chọn số dòng/trang
-                order: [[0, 'desc']], // Đây! Sắp mặc định theo cột ID DESC
+                processing: true,      //  Hiển thị trạng thái "Đang xử lý..." khi load dữ liệu
+                serverSide: true,      //  Bật chế độ server-side: phân trang, sort, search đều do server xử lý
+                ordering: true,        //  Cho phép sắp xếp các cột (nếu cột khai báo orderable: true)
+                searching: true,       //  Hiển thị ô tìm kiếm mặc định (có thể tắt nếu dùng filter riêng)
+                pageLength: 5,         //  Mặc định số dòng trên 1 trang là 5
+                lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]], //  Các tuỳ chọn số dòng/trang
+                order: [[0, 'desc']],  //  Mặc định sắp xếp cột index 0 (ID) giảm dần → mới nhất lên đầu
+                ajax: '{{ route('posts.data') }}', //  URL route Laravel trả JSON cho DataTables
 
-                // Cấu hình AJAX để gọi route Laravel trả JSON
-                ajax: '{{ route('posts.data') }}',
 
-                // Định nghĩa các cột hiển thị, tên key phải khớp JSON mà controller trả về
                 columns: [
-                    { data: 'id' },           // Cột ID bài viết
-                    { data: 'title' },        // Cột tiêu đề bài viết
-                    { data: 'email' },        // Cột email người tạo bài viết
-                    { data: 'status' },       // Cột trạng thái bài viết (label/badge)
-                    { data: 'created_at' },   // Cột ngày tạo bài viết (định dạng d/m/Y)
-
-                    // Cột cuối: hiển thị các nút hành động (Xem, Sửa, Xóa)
+                    { data: 'id' }, // 0: ID
                     {
-                        orderable: false,   // Không cho phép sắp xếp cột này
-                        searchable: false,  // Không cho phép tìm kiếm trong cột này
+                        data: 'thumbnail', orderable: false, searchable: false,
+                        render: function (data) {
+                            return data ? `<img src="${data}" alt="Thumbnail" width="80">` : '-';
+                        }
+                    },
+                    { data: 'title' },        // 2: Tiêu đề
+                    { data: 'description' },  // 3: Mô tả
+                    { data: 'publish_date' }, // 4: Ngày đăng
+                    { data: 'status' },       // 5: Trạng thái
+                    {
+                        data: null, orderable: false, searchable: false,
                         render: function (data, type, row) {
-                            // Render HTML nút Xem, Sửa, Xóa, gắn ID và Slug bài viết
                             return `
-                                    <a href="/posts/${row.slug}" class="btn btn-sm btn-outline-info p-1" title="Xem">
-                                        <i class="fa-solid fa-eye"></i>
-                                    </a>
-                                    <a href="/posts/${row.id}/edit" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
-                                        <i class="fa-solid fa-edit"></i>
-                                    </a>
-                                    <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                        <i class="fa-solid fa-trash"></i>
-                                    </button>
-                                `;
+                                                <div class="d-inline-flex align-items-center gap-1">
+                                                    <a href="/news/${row.slug}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                                        <i class="fa-solid fa-eye"></i>
+                                                    </a>
+                                                    <a href="/posts/${row.id}/edit" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                                        <i class="fa-solid fa-edit"></i>
+                                                    </a>
+                                                    <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                                        <i class="fa-solid fa-trash"></i>
+                                                    </button>
+                                                </div>`;
                         }
                     }
                 ],
 
-                // Thiết lập ngôn ngữ DataTables sang Tiếng Việt (file CDN)
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
                 }
             });
         });
 
-        // Hàm xử lý xóa 1 bài viết (nhận ID bài viết)
         function deletePost(id) {
-            // Hiển thị hộp thoại xác nhận trước khi xóa
             if (confirm('Bạn có chắc chắn muốn xóa?')) {
                 $.ajax({
-                    url: `/posts/${id}`, // URL Laravel endpoint xóa bài viết theo ID
-                    type: 'POST',        // Laravel yêu cầu gửi POST + _method
-                    data: {
-                        _method: 'DELETE',         // Laravel hiểu đây là DELETE (method spoofing)
-                        _token: '{{ csrf_token() }}' // Token CSRF xác thực form
-                    },
-                    success: function () {
-                        // Nếu xóa thành công, reload lại bảng để dữ liệu mới nhất
-                        table.ajax.reload();
-                    },
-                    error: function () {
-                        // Nếu có lỗi, hiển thị cảnh báo
-                        alert('Xóa thất bại!');
-                    }
+                    url: `/posts/${id}`,
+                    type: 'POST',
+                    data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
+                    success: function () { table.ajax.reload(); },
+                    error: function () { alert('Xóa thất bại!'); }
                 });
             }
         }
 
-        // Hàm xử lý xóa tất cả bài viết
         function deleteAllPosts() {
-            // Hộp thoại xác nhận xóa toàn bộ
             if (confirm('Bạn có chắc chắn muốn xóa tất cả?')) {
                 $.ajax({
-                    url: `{{ route('posts.destroyAll') }}`, // URL Laravel endpoint xóa tất cả
+                    url: `{{ route('posts.destroyAll') }}`,
                     type: 'POST',
-                    data: {
-                        _method: 'DELETE',         // Laravel hiểu đây là DELETE
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function () {
-                        // Reload lại bảng sau khi xóa tất cả
-                        table.ajax.reload();
-                    },
-                    error: function () {
-                        alert('Xóa tất cả thất bại!');
-                    }
+                    data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
+                    success: function () { table.ajax.reload(); },
+                    error: function () { alert('Xóa tất cả thất bại!'); }
                 });
             }
         }
     </script>
-
-
 @endpush

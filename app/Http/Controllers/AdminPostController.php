@@ -33,7 +33,7 @@ class AdminPostController extends Controller
     public function data(Request $request)
     {
         // Tạo query gốc lấy tất cả bài viết, kèm theo quan hệ user (tác giả)
-        $query = Post::query()->with('user');
+        $query = Post::query();
 
         // Nếu có tham số 'title' gửi lên, thêm điều kiện tìm kiếm theo tiêu đề bài viết
         if ($request->filled('title')) {
@@ -68,7 +68,7 @@ class AdminPostController extends Controller
             4 => 'created_at',
         ];
 
-        // Lấy index cột sắp xếp và chiều sắp xếp từ request DataTables
+        // Lấy index cột sắp xếp và chiều sắp xếp(asc hoặc desc) từ request DataTables
         $orderColIndex = $request->input('order.0.column');
         $orderDir = $request->input('order.0.dir');
 

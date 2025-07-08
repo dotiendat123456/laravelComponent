@@ -116,7 +116,7 @@
 
                 // Cấu hình ngôn ngữ DataTables sang Tiếng Việt
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
                 }
             });
 

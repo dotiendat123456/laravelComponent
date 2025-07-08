@@ -97,17 +97,17 @@
                         searchable: false,
                         render: function (data, type, row) {
                             return `
-                                    <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                        <i class="fa-solid fa-edit"></i> Sửa
-                                    </a>
-                                `;
+                                        <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                            <i class="fa-solid fa-edit"></i> Sửa
+                                        </a>
+                                    `;
                         }
                     }
                 ],
 
                 // Ngôn ngữ Tiếng Việt
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/vi.json'
+                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
                 }
             });
 
