@@ -33,7 +33,7 @@
 
             {{-- Mô tả --}}
             <div class="mb-3">
-                <label for="description" class="form-label">Mô tả</label>
+                <label for="description" class="form-label">Mô tả<span class="text-danger">*</span></label>
                 <input type="text" name="description" id="description" value="{{ old('description') }}"
                     class="form-control @error('description') is-invalid @enderror">
                 @error('description')
@@ -43,7 +43,7 @@
 
             {{-- Nội dung --}}
             <div class="mb-3">
-                <label class="form-label">Nội dung</label>
+                <label class="form-label">Nội dung <span class="text-danger">*</span></label>
                 <div id="editor" style="height: 300px;"></div>
                 <input type="hidden" name="content" id="content">
                 @error('content')
@@ -51,9 +51,10 @@
                 @enderror
             </div>
 
+
             {{-- Ngày đăng --}}
             <div class="mb-3">
-                <label for="publish_date" class="form-label">Ngày đăng</label>
+                <label for="publish_date" class="form-label">Ngày đăng<span class="text-danger">*</span></label>
                 <input type="datetime-local" name="publish_date" id="publish_date" value="{{ old('publish_date') }}"
                     class="form-control @error('publish_date') is-invalid @enderror">
                 @error('publish_date')
@@ -63,7 +64,7 @@
 
             {{-- Ảnh thumbnail --}}
             <div class="mb-3">
-                <label for="thumbnail" class="form-label">Thumbnail</label>
+                <label for="thumbnail" class="form-label">Thumbnail<span class="text-danger">*</span></label>
                 <input type="file" name="thumbnail" id="thumbnail"
                     class="form-control @error('thumbnail') is-invalid @enderror">
                 @error('thumbnail')

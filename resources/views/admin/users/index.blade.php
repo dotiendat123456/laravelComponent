@@ -70,8 +70,8 @@
                 serverSide: true,   // Bật chế độ server-side: phân trang, lọc do server xử lý
                 ordering: false,    // KHÓA sắp xếp, vì controller chỉ sắp latest('id')
                 searching: false,   // Tắt search mặc định, dùng form ngoài
-                pageLength: 5,      // Số dòng mặc định trên 1 trang
-                lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+                pageLength: 1,      // Số dòng mặc định trên 1 trang
+                lengthMenu: [[1, 3, 5, 10, 15], [1, 3, 5, 10, 15]],
 
                 // Cấu hình ajax gọi tới route Laravel
                 ajax: {
@@ -97,10 +97,10 @@
                         searchable: false,
                         render: function (data, type, row) {
                             return `
-                                        <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                            <i class="fa-solid fa-edit"></i> Sửa
-                                        </a>
-                                    `;
+                                            <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                                <i class="fa-solid fa-edit"></i> Sửa
+                                            </a>
+                                        `;
                         }
                     }
                 ],

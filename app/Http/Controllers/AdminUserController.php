@@ -16,34 +16,25 @@ class AdminUserController extends Controller
         return view('admin.users.index');
     }
 
+
+
+
     public function data(Request $request)
     {
-        // Tạo query lấy tất cả user
+        // Bước 1: Tạo query gốc lấy tất cả user
         $query = User::query();
 
-        // Nếu request có trường 'name', lọc theo CONCAT(first_name last_name)
+        // Bước 2: Nếu request có trường 'name', lọc theo CONCAT(first_name, last_name)
         if ($request->filled('name')) {
             $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$request->name}%"]);
         }
 
-        // Nếu request có trường 'email', lọc theo email
+        // Bước 3: Nếu request có trường 'email', lọc theo email
         if ($request->filled('email')) {
             $query->where('email', 'like', "%{$request->email}%");
         }
 
-        // Đếm tổng số user trong bảng (không áp dụng filter)
-        $totalData = User::count();
-
-        // Đếm tổng số user sau khi filter (nếu có)
-        $totalFiltered = $query->count();
-
-        // Lấy limit (số dòng trên 1 trang) từ DataTables
-        $limit = intval($request->input('length'));
-
-        // Lấy offset (bắt đầu từ dòng thứ mấy)
-        $start = intval($request->input('start'));
-
-        // Ánh xạ cột nếu cần sắp xếp động sau này (hiện tại vẫn khóa latest)
+        // Bước 4: Ánh xạ cột để cho phép sort nếu cần
         $columns = [
             0 => 'first_name',
             1 => 'email',
@@ -51,48 +42,52 @@ class AdminUserController extends Controller
             3 => 'status',
         ];
 
-        // Nếu bạn muốn cho phép sắp xếp, bạn sẽ lấy:
-        // $orderColIndex = $request->input('order.0.column');
-        // $orderDir = $request->input('order.0.dir');
-        // và $query->orderBy($columns[$orderColIndex], $orderDir)
+        // Nếu muốn sắp xếp động theo cột, có thể mở các dòng sau:
+        $orderColIndex = $request->input('order.0.column');
+        $orderDir = $request->input('order.0.dir');
 
-        // Ở đây: ta KHÓA sắp xếp latest theo id mới nhất
-        $users = $query
-            ->offset($start)
-            ->limit($limit)
-            ->latest('id')
-            ->get();
-
-        // Tạo mảng dữ liệu trả về
-        $data = [];
-        foreach ($users as $user) {
-            // Tạo badge status dạng HTML
-            $statusLabel = match ($user->status) {
-                UserStatus::PENDING => '<span class="badge bg-secondary">' . $user->status->label() . '</span>',
-                UserStatus::APPROVED => '<span class="badge bg-success">' . $user->status->label() . '</span>',
-                UserStatus::REJECTED => '<span class="badge bg-danger">' . $user->status->label() . '</span>',
-                UserStatus::LOCKED => '<span class="badge bg-dark">' . $user->status->label() . '</span>',
-                default => '<span class="badge bg-light">Không rõ</span>',
-            };
-
-            $data[] = [
-                'name' => $user->first_name . ' ' . $user->last_name, // Tên đầy đủ
-                'email' => $user->email,                              // Email
-                'address' => $user->address,                          // Địa chỉ
-                'status' => $statusLabel,                             // HTML badge trạng thái
-                'id' => $user->id,                                    // ID cho nút sửa
-            ];
+        if (
+            $orderColIndex === null ||
+            !isset($columns[$orderColIndex])
+        ) {
+            $query->orderByDesc('id');
+        } else {
+            $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        // Trả về JSON chuẩn DataTables yêu cầu
+        // Bước 5: Tính limit và trang hiện tại theo DataTables
+        $length = intval($request->input('length', 10));
+        $start = intval($request->input('start', 0));
+        $page = ($start / $length) + 1;
+
+        // Bước 6: Sử dụng paginate + through để chuẩn hoá dữ liệu trước khi trả ra
+        $users = $query->paginate($length, ['*'], 'page', $page)
+            ->through(function ($user) {
+                $statusLabel = match ($user->status) {
+                    UserStatus::PENDING => '<span class="badge bg-secondary">' . $user->status->label() . '</span>',
+                    UserStatus::APPROVED => '<span class="badge bg-success">' . $user->status->label() . '</span>',
+                    UserStatus::REJECTED => '<span class="badge bg-danger">' . $user->status->label() . '</span>',
+                    UserStatus::LOCKED => '<span class="badge bg-dark">' . $user->status->label() . '</span>',
+                    default => '<span class="badge bg-light">Không rõ</span>',
+                };
+
+                return [
+                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'email' => $user->email,
+                    'address' => $user->address,
+                    'status' => $statusLabel,
+                    'id' => $user->id,
+                ];
+            });
+
+        // Bước 7: Trả JSON đúng format DataTables yêu cầu
         return response()->json([
-            'draw' => intval($request->input('draw')), // Số lần request DataTables
-            'recordsTotal' => $totalData,              // Tổng số user gốc
-            'recordsFiltered' => $totalFiltered,       // Tổng số user sau filter
-            'data' => $data,                           // Mảng dữ liệu trang hiện tại
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => $users->total(),      // Tổng số user gốc
+            'recordsFiltered' => $users->total(),   // Tổng số user sau filter
+            'data' => $users->items(),              // Mảng dữ liệu trang hiện tại
         ]);
     }
-
 
 
 

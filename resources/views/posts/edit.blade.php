@@ -22,7 +22,7 @@
 
             {{-- Tiêu đề --}}
             <div class="mb-3">
-                <label for="title" class="form-label">Tiêu đề</label>
+                <label for="title" class="form-label">Tiêu đề<span class="text-danger">*</span></label>
                 <input type="text" name="title" id="title" value="{{ old('title', $post->title) }}"
                     class="form-control @error('title') is-invalid @enderror">
                 @error('title')
@@ -32,7 +32,7 @@
 
             {{-- Mô tả --}}
             <div class="mb-3">
-                <label for="description" class="form-label">Mô tả</label>
+                <label for="description" class="form-label">Mô tả<span class="text-danger">*</span></label>
                 <input type="text" name="description" id="description" value="{{ old('description', $post->description) }}"
                     class="form-control @error('description') is-invalid @enderror">
                 @error('description')
@@ -42,7 +42,7 @@
 
             {{-- Nội dung --}}
             <div class="mb-3">
-                <label class="form-label">Nội dung</label>
+                <label class="form-label">Nội dung<span class="text-danger">*</span></label>
                 <div id="editor" style="height: 300px;">{!! old('content', $post->content) !!}</div>
                 <input type="hidden" name="content" id="content">
                 @error('content')
@@ -52,7 +52,7 @@
 
             {{-- Ngày đăng --}}
             <div class="mb-3">
-                <label for="publish_date" class="form-label">Ngày đăng</label>
+                <label for="publish_date" class="form-label">Ngày đăng<span class="text-danger">*</span></label>
                 <input type="datetime-local" name="publish_date" id="publish_date"
                     value="{{ old('publish_date', $post->publish_date ? $post->publish_date->format('Y-m-d\TH:i') : '') }}"
                     class="form-control @error('publish_date') is-invalid @enderror">
@@ -63,7 +63,7 @@
 
             {{-- Thumbnail --}}
             <div class="mb-3">
-                <label for="thumbnail" class="form-label">Thumbnail</label>
+                <label for="thumbnail" class="form-label">Thumbnail<span class="text-danger">*</span></label>
                 <input type="file" name="thumbnail" id="thumbnail"
                     class="form-control @error('thumbnail') is-invalid @enderror">
                 @error('thumbnail')

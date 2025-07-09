@@ -17,9 +17,9 @@ class AdminUpdatePostRequest extends FormRequest
     {
         $rules = [
             'title' => ['required', 'string', 'max:100'],
-            'description' => ['nullable', 'string', 'max:200'],
-            'content' => ['nullable', 'string'],
-            'publish_date' => ['nullable', 'date'],
+            'description' => ['required', 'string', 'max:200'],
+            'content' => ['required', 'string'],
+            'publish_date' => ['required', 'date'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
         ];
 
@@ -44,12 +44,16 @@ class AdminUpdatePostRequest extends FormRequest
             'title.string' => 'Tiêu đề phải là chuỗi.',
             'title.max' => 'Tiêu đề không được vượt quá 100 ký tự.',
 
+            'description.required' => 'Vui lòng nhập mô tả.',
             'description.string' => 'Mô tả phải là chuỗi.',
             'description.max' => 'Mô tả không được vượt quá 200 ký tự.',
 
+            'content.required' => 'Vui lòng nhập nội dung.',
             'content.string' => 'Nội dung phải là chuỗi.',
 
+            'publish_date.required' => 'Vui lòng nhập ngày đăng.',
             'publish_date.date' => 'Ngày đăng không hợp lệ.',
+
 
             'thumbnail.image' => 'Thumbnail phải là định dạng ảnh.',
             'thumbnail.max' => 'Thumbnail không được vượt quá 2MB.',
