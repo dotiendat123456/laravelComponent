@@ -73,17 +73,17 @@
                         data: null, orderable: false, searchable: false,
                         render: function (data, type, row) {
                             return `
-                                                        <div class="d-inline-flex align-items-center gap-1">
-                                                            <a href="/news/${row.slug}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
-                                                                <i class="fa-solid fa-eye"></i>
-                                                            </a>
-                                                            <a href="/posts/${row.id}/edit" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
-                                                                <i class="fa-solid fa-edit"></i>
-                                                            </a>
-                                                            <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                                                <i class="fa-solid fa-trash"></i>
-                                                            </button>
-                                                        </div>`;
+                                                                <div class="d-inline-flex align-items-center gap-1">
+                                                                    <a href="/news/${row.slug}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                                                        <i class="fa-solid fa-eye"></i>
+                                                                    </a>
+                                                                    <a href="/posts/${row.id}/edit" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                                                        <i class="fa-solid fa-edit"></i>
+                                                                    </a>
+                                                                    <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                                                        <i class="fa-solid fa-trash"></i>
+                                                                    </button>
+                                                                </div>`;
                         }
                     }
                 ],

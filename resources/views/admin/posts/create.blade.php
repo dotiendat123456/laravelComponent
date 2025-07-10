@@ -96,7 +96,13 @@
         }
 
         document.getElementById('postForm').addEventListener('submit', function (e) {
-            document.getElementById('content').value = quill.root.innerHTML;
+            const plainText = quill.getText().trim();
+            if (plainText === '') {
+                document.getElementById('content').value = '';
+            } else {
+                document.getElementById('content').value = quill.root.innerHTML;
+            }
         });
     </script>
+
 @endpush

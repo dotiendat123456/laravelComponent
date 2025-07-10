@@ -229,8 +229,6 @@ class AdminPostController extends Controller
 
 
 
-
-
     public function destroy(Post $post)
     {
         $this->authorize('delete', $post);

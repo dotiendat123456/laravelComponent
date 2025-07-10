@@ -45,6 +45,8 @@
                 <label class="form-label">Nội dung<span class="text-danger">*</span></label>
                 <div id="editor" style="height: 300px;">{!! old('content', $post->content) !!}</div>
                 <input type="hidden" name="content" id="content">
+                                  
+
                 @error('content')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
