@@ -3,6 +3,8 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Enums\UserRole;
+
 use Illuminate\Auth\Access\Response;
 
 class UserPolicy

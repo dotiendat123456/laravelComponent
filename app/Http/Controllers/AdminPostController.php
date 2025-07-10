@@ -106,6 +106,7 @@ class AdminPostController extends Controller
 
     public function create()
     {
+        $this->authorize('create', Post::class);
         return view('admin.posts.create');
     }
 
@@ -113,6 +114,8 @@ class AdminPostController extends Controller
 
     public function store(AdminStorePostRequest $request)
     {
+        $this->authorize('create', Post::class);
+
         DB::beginTransaction();
 
         try {
@@ -251,6 +254,7 @@ class AdminPostController extends Controller
 
     public function destroyAll()
     {
+
         DB::beginTransaction();
         try {
             Post::query()->delete();
