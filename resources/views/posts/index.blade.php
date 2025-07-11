@@ -18,11 +18,9 @@
                 <i class="bi bi-plus"></i> Tạo mới
             </a>
 
-
-            <button id="btnDeleteAll" type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
+            <button type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
                 <i class="bi bi-trash"></i> Xóa tất cả
             </button>
-
         </div>
 
         <div class="table-responsive">
@@ -74,33 +72,29 @@
                     {
                         data: null, orderable: false, searchable: false,
                         render: function (data, type, row) {
+                            const viewUrl = "{{ route('news.show', ':slug') }}".replace(':slug', row.slug);
+                            const editUrl = "{{ route('posts.edit', ':id') }}".replace(':id', row.id);
+
                             return `
-                                                                                <div class="d-inline-flex align-items-center gap-1">
-                                                                                    <a href="/news/${row.slug}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
-                                                                                        <i class="fa-solid fa-eye"></i>
-                                                                                    </a>
-                                                                                    <a href="/posts/${row.id}/edit" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
-                                                                                        <i class="fa-solid fa-edit"></i>
-                                                                                    </a>
-                                                                                    <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                                                                        <i class="fa-solid fa-trash"></i>
-                                                                                    </button>
-                                                                                </div>`;
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                            <i class="fa-solid fa-eye"></i>
+                                        </a>
+                                        <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                            <i class="fa-solid fa-edit"></i>
+                                        </a>
+                                        <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>`;
                         }
+
+
                     }
                 ],
 
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
-                }
-            });
-            // Lắng nghe sự kiện khi load xong dữ liệu
-            table.on('xhr.dt', function (e, settings, json, xhr) {
-                // json.recordsTotal = tổng số bản ghi
-                if (json.recordsTotal === 0) {
-                    $('#btnDeleteAll').hide();
-                } else {
-                    $('#btnDeleteAll').show();
+                    url: '//cdn.datatables.net/plug-ins/1.13.8/i18n/vi.json'
                 }
             });
         });
@@ -108,7 +102,8 @@
         function deletePost(id) {
             if (confirm('Bạn có chắc chắn muốn xóa?')) {
                 $.ajax({
-                    url: `/posts/${id}`,
+                    // url: `/posts/${id}`,
+                    url: `{{ route('posts.destroy', ':id') }}`.replace(':id', id),
                     type: 'POST',
                     data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
                     success: function () { table.ajax.reload(); },

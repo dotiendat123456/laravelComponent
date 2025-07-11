@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Enums\UserStatus;
+use App\Enums\UserRole;
+use Illuminate\Support\Facades\Auth;
 
 class AdminUserController extends Controller
 {
@@ -21,20 +23,20 @@ class AdminUserController extends Controller
 
     public function data(Request $request)
     {
-        // Bước 1: Tạo query gốc lấy tất cả user
+        // B1: Query gốc lấy toàn bộ users
         $query = User::query();
 
-        // Bước 2: Nếu request có trường 'name', lọc theo CONCAT(first_name, last_name)
+        // B2: Lọc theo tên (ghép first_name + last_name)
         if ($request->filled('name')) {
             $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$request->name}%"]);
         }
 
-        // Bước 3: Nếu request có trường 'email', lọc theo email
+        // B3: Lọc theo email
         if ($request->filled('email')) {
             $query->where('email', 'like', "%{$request->email}%");
         }
 
-        // Bước 4: Ánh xạ cột để cho phép sort nếu cần
+        // B4: Định nghĩa cột cho phép sắp xếp
         $columns = [
             0 => 'first_name',
             1 => 'email',
@@ -42,7 +44,7 @@ class AdminUserController extends Controller
             3 => 'status',
         ];
 
-        // Nếu muốn sắp xếp động theo cột, có thể mở các dòng sau:
+        // B5: Xử lý sort nếu có
         $orderColIndex = $request->input('order.0.column');
         $orderDir = $request->input('order.0.dir');
 
@@ -55,39 +57,36 @@ class AdminUserController extends Controller
             $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        // Bước 5: Tính limit và trang hiện tại theo DataTables
+        // B6: Phân trang chuẩn DataTables
         $length = intval($request->input('length', 10));
         $start = intval($request->input('start', 0));
         $page = ($start / $length) + 1;
 
-        // Bước 6: Sử dụng paginate + through để chuẩn hoá dữ liệu trước khi trả ra
+        // B7: Chuẩn hoá dữ liệu qua through
         $users = $query->paginate($length, ['*'], 'page', $page)
             ->through(function ($user) {
-                $statusLabel = match ($user->status) {
-                    UserStatus::PENDING => '<span class="badge bg-secondary">' . $user->status->label() . '</span>',
-                    UserStatus::APPROVED => '<span class="badge bg-success">' . $user->status->label() . '</span>',
-                    UserStatus::REJECTED => '<span class="badge bg-danger">' . $user->status->label() . '</span>',
-                    UserStatus::LOCKED => '<span class="badge bg-dark">' . $user->status->label() . '</span>',
-                    default => '<span class="badge bg-light">Không rõ</span>',
-                };
-
                 return [
                     'name' => $user->first_name . ' ' . $user->last_name,
                     'email' => $user->email,
                     'address' => $user->address,
-                    'status' => $statusLabel,
+
+                    // 👇 Không render HTML trực tiếp
+                    'status_value' => $user->status->value,
+                    'status_label' => $user->status->label(),
+
                     'id' => $user->id,
                 ];
             });
 
-        // Bước 7: Trả JSON đúng format DataTables yêu cầu
+        // B8: Trả JSON chuẩn DataTables
         return response()->json([
             'draw' => intval($request->input('draw')),
-            'recordsTotal' => $users->total(),      // Tổng số user gốc
-            'recordsFiltered' => $users->total(),   // Tổng số user sau filter
-            'data' => $users->items(),              // Mảng dữ liệu trang hiện tại
+            'recordsTotal' => $users->total(),
+            'recordsFiltered' => $users->total(),
+            'data' => $users->items(),
         ]);
     }
+
 
 
 
@@ -132,5 +131,35 @@ class AdminUserController extends Controller
 
             return back()->withErrors(['error' => 'Đã xảy ra lỗi khi cập nhật user, vui lòng thử lại!']);
         }
+    }
+    public function toggleStatus(User $user, Request $request)
+    {
+        // Không cho tự khoá hoặc chỉnh trạng thái chính mình
+        if (Auth::id() === $user->id) {
+            return response()->json([
+                'message' => 'Bạn không thể tự thay đổi trạng thái của chính mình!'
+            ], 403);
+        }
+
+        // Không cho khoá user Admin
+        if ($user->role === UserRole::ADMIN && $request->action === 'lock') {
+            return response()->json([
+                'message' => 'Không thể khoá tài khoản ADMIN.'
+            ], 403);
+        }
+
+        // Xác định trạng thái mới
+        $newStatus = match ($request->action) {
+            'lock'   => UserStatus::LOCKED,
+            'unlock' => UserStatus::PENDING,
+            default  => $user->status, // fallback: giữ nguyên
+        };
+
+        // Cập nhật bằng update()
+        $user->update([
+            'status' => $newStatus
+        ]);
+
+        return response()->json(['success' => true]);
     }
 }

@@ -6,38 +6,59 @@
             <span style="border-left: 4px solid red; padding-left: 8px;">TIN MỚI</span>
         </h3>
 
-        @forelse ($posts as $post)
-            <div class="row mb-4">
-                <div class="col-md-4">
-                    @if ($post->getFirstMediaUrl('thumbnails'))
-                        <img src="{{ $post->getFirstMediaUrl('thumbnails') }}" alt="{{ $post->title }}"
-                            class="img-fluid rounded news-thumbnail">
-                    @else
-                        <img src="https://via.placeholder.com/400x250?text=No+Image" alt="No Image"
-                            class="img-fluid rounded news-thumbnail">
-                    @endif
+        <div id="posts-list">
+            @forelse ($posts as $post)
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        @if ($post->getFirstMediaUrl('thumbnails'))
+                            <img src="{{ $post->getFirstMediaUrl('thumbnails') }}" alt="{{ $post->title }}"
+                                class="img-fluid rounded news-thumbnail">
+                        @else
+                            <img src="https://via.placeholder.com/400x250?text=No+Image" alt="No Image"
+                                class="img-fluid rounded news-thumbnail">
+                        @endif
+                    </div>
+                    <div class="col-md-8">
+                        <h5 class="news-title">
+                            <a href="{{ route('news.show', $post) }}" class="text-dark fw-bold">
+                                {{ $post->title }}
+                            </a>
+                        </h5>
+                        <p class="text-muted small mb-1">
+                            {{ $post->publish_date ? $post->publish_date->format('H:i d/m/Y') : '' }}
+                        </p>
+                        <p class="news-description">
+                            {{ $post->description }}
+                        </p>
+                    </div>
                 </div>
-                <div class="col-md-8">
-                    <h5 class="news-title">
-                        <a href="{{ route('news.show', $post) }}" class="text-dark fw-bold">
-                            {{ $post->title }}
-                        </a>
-                    </h5>
-                    <p class="text-muted small mb-1">
-                        {{ $post->publish_date ? $post->publish_date->format('H:i d/m/Y') : '' }}
-                    </p>
-                    <p class="news-description">
-                        {{ $post->description }}
-                    </p>
-                </div>
-            </div>
-        @empty
-            <p class="text-muted">Hiện chưa có bài viết nào được phê duyệt.</p>
-        @endforelse
+            @empty
+                <p class="text-muted">Hiện chưa có bài viết nào được phê duyệt.</p>
+            @endforelse
 
-        {{ $posts->links('pagination::bootstrap-5') }}
+            {{ $posts->links('pagination::bootstrap-5') }}
+        </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        $(document).on('click', '#posts-list .pagination a', function (e) {
+            e.preventDefault();
+            let url = $(this).attr('href');
+
+            $.get(url, function (data) {
+                // Lấy HTML fragment thôi → Laravel trả về view đầy đủ
+                // Nên chỉ lấy phần #posts-list của response
+                let html = $(data).find('#posts-list').html();
+                $('#posts-list').html(html);
+            }).fail(function () {
+                alert('Lỗi khi tải trang.');
+            });
+        });
+    </script>
+@endpush
+
 
 @push('styles')
     <style>

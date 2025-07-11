@@ -60,6 +60,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'check.user.status'])->grou
     Route::get('/users/data', [AdminUserController::class, 'data'])->name('admin.users.data');
     Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('admin.users.edit');
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('admin.users.update');
+    Route::post('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('admin.users.toggleStatus');
 });
 
 

@@ -161,10 +161,11 @@ class PostController extends Controller
         $posts = Post::where('status', PostStatus::APPROVED->value)
             ->where('publish_date', '<=', now())
             ->latest('publish_date')
-            ->paginate(10);
+            ->paginate(2);
 
         return view('news.index', compact('posts'));
     }
+
 
 
 

@@ -33,4 +33,14 @@ class PostFactory extends Factory
             'status' => PostStatus::PENDING->value,
         ];
     }
+
+    public function configure()
+    {
+        return $this->afterCreating(function (Post $post) {
+            // Gán ảnh mặc định khi seed
+            $post->addMedia(storage_path('app/public/default/default-thumbnail.png'))
+                ->preservingOriginal()
+                ->toMediaCollection('thumbnails');
+        });
+    }
 }

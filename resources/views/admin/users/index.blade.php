@@ -59,64 +59,106 @@
 
 @push('scripts')
     <script>
-        // Khai báo biến table để lưu instance DataTable
         let table;
 
-        // Khi tài liệu HTML tải xong, khởi tạo DataTable
         $(document).ready(function () {
-            // Khởi tạo DataTable cho bảng #usersTable
             table = $('#usersTable').DataTable({
-                processing: true,   // Hiển thị trạng thái loading
-                serverSide: true,   // Bật chế độ server-side: phân trang, lọc do server xử lý
-                ordering: false,    // KHÓA sắp xếp, vì controller chỉ sắp latest('id')
-                searching: false,   // Tắt search mặc định, dùng form ngoài
-                pageLength: 1,      // Số dòng mặc định trên 1 trang
+                processing: true,
+                serverSide: true,
+                ordering: false,
+                searching: false,
+                pageLength: 5,
                 lengthMenu: [[1, 3, 5, 10, 15], [1, 3, 5, 10, 15]],
 
-                // Cấu hình ajax gọi tới route Laravel
                 ajax: {
                     url: '{{ route('admin.users.data') }}',
                     data: function (d) {
-                        // Lấy giá trị input form filter
                         d.name = $('input[name=name]').val();
                         d.email = $('input[name=email]').val();
                     }
                 },
 
-                // Cấu hình các cột dữ liệu khớp với controller
                 columns: [
-                    { data: 'name' },    // Tên đầy đủ user
-                    { data: 'email' },   // Email user
-                    { data: 'address' }, // Địa chỉ
-                    { data: 'status' },  // Trạng thái (badge HTML)
+                    { data: 'name' },
+                    { data: 'email' },
+                    { data: 'address' },
 
-                    // Cột nút thao tác (Sửa)
+                    {
+                        data: null,
+                        render: function (data, type, row) {
+                            // Hiển thị badge theo status_value
+                            let badgeClass = 'secondary';
+                            switch (row.status_value) {
+                                case 0: badgeClass = 'warning'; break; // PENDING
+                                case 1: badgeClass = 'success'; break; // APPROVED
+                                case 2: badgeClass = 'danger'; break;  // REJECTED
+                                case 3: badgeClass = 'dark'; break;    // LOCKED
+                            }
+                            return `<span class="badge bg-${badgeClass}">${row.status_label}</span>`;
+                        }
+                    },
+
                     {
                         data: null,
                         orderable: false,
                         searchable: false,
                         render: function (data, type, row) {
+                            const editUrl = "{{ route('admin.users.edit', ':id') }}".replace(':id', row.id);
+
+                            let toggleBtn = '';
+
+                            if (row.status_value === 3) {
+                                toggleBtn = `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
+                                                        <i class="fa-solid fa-lock-open"></i> Mở khóa
+                                                     </button>`;
+                            } else {
+                                toggleBtn = `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
+                                                        <i class="fa-solid fa-lock"></i> Khóa
+                                                     </button>`;
+                            }
+
                             return `
-                                            <a href="/admin/users/${row.id}/edit" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                                <i class="fa-solid fa-edit"></i> Sửa
-                                            </a>
-                                        `;
+                                        <a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                            <i class="fa-solid fa-edit"></i> Sửa
+                                        </a>
+                                        ${toggleBtn}
+                                    `;
                         }
                     }
                 ],
 
-                // Ngôn ngữ Tiếng Việt
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
+                    url: '//cdn.datatables.net/plug-ins/1.13.8/i18n/vi.json'
                 }
             });
 
-            // Bắt sự kiện submit form filter, reload DataTable với dữ liệu mới
             $('#searchForm').on('submit', function (e) {
                 e.preventDefault();
                 table.ajax.reload();
             });
         });
-    </script>
 
+        function toggleStatus(id, action) {
+            let confirmMsg = action === 'lock'
+                ? 'Bạn có chắc chắn muốn KHÓA tài khoản này?'
+                : 'Bạn có chắc chắn muốn MỞ KHÓA tài khoản này?';
+
+            if (confirm(confirmMsg)) {
+                $.ajax({
+                    url: "{{ route('admin.users.toggleStatus', ':id') }}".replace(':id', id),
+                    type: 'POST',
+                    data: {
+                        _token: '{{ csrf_token() }}',
+                        action: action
+                    },
+                    success: function () {
+                        table.ajax.reload();
+                    },
+                    error: function () {
+                        alert('Thao tác thất bại!');
+                    }
+                });
+            }
+        }
+    </script>
 @endpush
