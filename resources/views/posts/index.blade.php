@@ -18,7 +18,7 @@
                 <i class="bi bi-plus"></i> Tạo mới
             </a>
 
-            <button type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
+            <button id="btnDeleteAll" type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
                 <i class="bi bi-trash"></i> Xóa tất cả
             </button>
         </div>
@@ -76,17 +76,17 @@
                             const editUrl = "{{ route('posts.edit', ':id') }}".replace(':id', row.id);
 
                             return `
-                                    <div class="d-inline-flex align-items-center gap-1">
-                                        <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
-                                            <i class="fa-solid fa-eye"></i>
-                                        </a>
-                                        <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
-                                            <i class="fa-solid fa-edit"></i>
-                                        </a>
-                                        <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                            <i class="fa-solid fa-trash"></i>
-                                        </button>
-                                    </div>`;
+                                <div class="d-inline-flex align-items-center gap-1">
+                                    <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                    <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                        <i class="fa-solid fa-edit"></i>
+                                    </a>
+                                    <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>`;
                         }
 
 
@@ -95,6 +95,13 @@
 
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.8/i18n/vi.json'
+                }
+            });
+            table.on('xhr.dt', function (e, settings, json, xhr) {
+                if (json.recordsTotal === 0) {
+                    $('#btnDeleteAll').hide();
+                } else {
+                    $('#btnDeleteAll').show();
                 }
             });
         });

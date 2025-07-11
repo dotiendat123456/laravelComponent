@@ -9,10 +9,14 @@ use Illuminate\Auth\Access\Response;
 
 class UserPolicy
 {
-    public function updateStatus(User $authUser, User $targetUser): bool
+    // public function updateStatus(User $authUser, User $targetUser): bool
+    // {
+    //     // Ví dụ: chỉ Admin mới được sửa user khác
+    //     return $authUser->isAdmin();
+    // }
+    public function updateStatus(User $User, User $targetUser): bool
     {
-        // Ví dụ: chỉ Admin mới được sửa user khác
-        return $authUser->isAdmin();
+        return $User->isAdmin() && $User->id !== $targetUser->id;
     }
 
     /**
