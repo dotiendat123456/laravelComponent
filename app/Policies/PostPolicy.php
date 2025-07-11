@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Enums\UserRole;
 use App\Models\Post;
 use App\Models\User;
+
 use Illuminate\Auth\Access\Response;
 
 class PostPolicy
@@ -15,6 +16,11 @@ class PostPolicy
     public function viewAny(User $user): bool
     {
         return $user->isAdmin();
+    }
+    public function viewUser(User $user): bool
+    {
+        // return $user->isAdmin();
+        return $user->role === UserRole::USER;
     }
 
     // Quyền xem

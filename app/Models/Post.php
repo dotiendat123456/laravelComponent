@@ -9,9 +9,11 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use App\Enums\UserRole;
 use App\Enums\PostStatus;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Observers\PostObserver;
 
 
+#[ObservedBy([PostObserver::class])]
 class Post extends Model implements HasMedia
 {
     use HasFactory;
@@ -51,8 +53,8 @@ class Post extends Model implements HasMedia
     /**
      * The "booted" method of the model.
      */
-    protected static function booted(): void
-    {
-        static::observe(PostObserver::class);
-    }
+    // protected static function booted(): void
+    // {
+    //     static::observe(PostObserver::class);
+    // }
 }

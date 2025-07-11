@@ -96,6 +96,9 @@
         }
 
         document.getElementById('postForm').addEventListener('submit', function (e) {
+            // console.log('Quill HTML khi submit:', quill.root.innerHTML);
+            // console.log('Quill Delta khi submit:', quill.getContents());
+            // console.log('Quill Text khi submit:', quill.getText());
             const plainText = quill.getText().trim();
             if (plainText === '') {
                 document.getElementById('content').value = '';

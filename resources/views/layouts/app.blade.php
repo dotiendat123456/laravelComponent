@@ -85,10 +85,10 @@
         </div>
     </nav>
 
-    @can('viewAny', App\Models\Post::class)
-        <!--  TRƯỜNG HỢP ADMIN: SIDEBAR + CONTENT -->
+    @if (Auth::user()?->can('viewAny', App\Models\Post::class))
+        <!-- ADMIN -->
         <div id="app" class="d-flex" style="padding-top: 56px;">
-            <!-- Sidebar nằm dưới Navbar -->
+            <!-- Sidebar Admin -->
             <nav id="sidebar" class="bg-light border-end position-fixed"
                 style="width: 240px; top: 56px; bottom: 0; overflow-y: auto;">
                 <div class="p-3">
@@ -113,27 +113,59 @@
                 </div>
             </nav>
 
-            <!-- Nội dung bên phải -->
+            <!-- Content -->
             <div class="flex-grow-1" style="margin-left: 240px;">
                 <main class="py-4 container">
                     @yield('content')
                 </main>
             </div>
         </div>
+
+    @elseif (Auth::user()?->can('viewUser', App\Models\Post::class))
+        <!-- USER -->
+        <div id="app" class="d-flex" style="padding-top: 56px;">
+            <!-- Sidebar User -->
+            <nav id="sidebar" class="bg-light border-end position-fixed"
+                style="width: 200px; top: 56px; bottom: 0; overflow-y: auto;">
+                <div class="p-3">
+                    <h4 class="text-center">User</h4>
+                    <ul class="nav flex-column">
+                        <li class="nav-item mb-2">
+                            <a href="{{ route('posts.index') }}" class="nav-link">
+                                Danh sách bài viết
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{{ route('news.index') }}" class="nav-link">
+                                Chi tiết bài viết
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Content -->
+            <div class="flex-grow-1" style="margin-left: 200px;">
+                <main class="py-4 container">
+                    @yield('content')
+                </main>
+            </div>
+        </div>
+
     @else
-        <!--  TRƯỜNG HỢP USER: FULL WIDTH -->
+        <!-- KHÔNG PHẢI ADMIN HOẶC USER -->
         <div id="app" style="padding-top: 56px;">
             <main class="py-4 container">
                 @yield('content')
             </main>
         </div>
-    @endcan
+    @endif
+
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
 
     @stack('scripts')
 </body>
-
 
 </html>

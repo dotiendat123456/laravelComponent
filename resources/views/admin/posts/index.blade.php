@@ -33,7 +33,7 @@
                 <i class="fa-solid fa-plus"></i> Tạo mới
             </a>
 
-            <button type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
+            <button id="btnDeleteAll" type="button" onclick="deleteAllPosts()" class="btn btn-outline-danger">
                 <i class="fa-solid fa-trash"></i> Xóa tất cả
             </button>
         </div>
@@ -117,6 +117,15 @@
                 // Cấu hình ngôn ngữ DataTables sang Tiếng Việt
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.7/i18n/vi.json'
+                }
+            });
+            // Lắng nghe sự kiện khi load xong dữ liệu
+            table.on('xhr.dt', function (e, settings, json, xhr) {
+                // json.recordsTotal = tổng số bản ghi
+                if (json.recordsTotal === 0) {
+                    $('#btnDeleteAll').hide();
+                } else {
+                    $('#btnDeleteAll').show();
                 }
             });
 
