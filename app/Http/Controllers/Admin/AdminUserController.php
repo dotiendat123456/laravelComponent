@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
-use App\Http\Requests\AdminUpdateProfileRequest;
+use App\Http\Requests\Admin\AdminUpdateProfileRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 use App\Enums\UserStatus;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
+
 
 class AdminUserController extends Controller
 {

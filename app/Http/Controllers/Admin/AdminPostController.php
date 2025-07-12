@@ -1,20 +1,22 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
 use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\AdminStorePostRequest;
-use App\Http\Requests\AdminUpdatePostRequest;
+use App\Http\Requests\Admin\AdminStorePostRequest;
+use App\Http\Requests\Admin\AdminUpdatePostRequest;
 use Illuminate\Support\Str;
 use App\Enums\UserRole;
 use App\Jobs\NotifyUserPostStatusJob;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Enums\PostStatus;
+use App\Http\Controllers\Controller;
+
 
 class AdminPostController extends Controller
 {
