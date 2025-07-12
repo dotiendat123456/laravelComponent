@@ -53,4 +53,7 @@ php artisan migrate
 
 php artisan storage:link
 
-Cài đặt policy
+Cài đặt Debug bar for laravel
+
+composer require barryvdh/laravel-debugbar --dev
+php artisan vendor:publish --provider="Barryvdh\Debugbar\ServiceProvider"
