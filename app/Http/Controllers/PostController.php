@@ -168,7 +168,6 @@ class PostController extends Controller
 
 
 
-
     public function publicShow(Post $post)
     {
         if (
