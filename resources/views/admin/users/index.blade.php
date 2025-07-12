@@ -109,20 +109,20 @@
 
                             if (row.status_value === 3) {
                                 toggleBtn = `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
-                                                        <i class="fa-solid fa-lock-open"></i> Mở khóa
-                                                     </button>`;
+                                                                <i class="fa-solid fa-lock-open"></i> Mở khóa
+                                                             </button>`;
                             } else {
                                 toggleBtn = `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
-                                                        <i class="fa-solid fa-lock"></i> Khóa
-                                                     </button>`;
+                                                                <i class="fa-solid fa-lock"></i> Khóa
+                                                             </button>`;
                             }
 
                             return `
-                                        <a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                            <i class="fa-solid fa-edit"></i> Sửa
-                                        </a>
-                                        ${toggleBtn}
-                                    `;
+                                                <a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                                    <i class="fa-solid fa-edit"></i> Sửa
+                                                </a>
+                                                ${toggleBtn}
+                                            `;
                         }
                     }
                 ],
@@ -154,9 +154,15 @@
                     success: function () {
                         table.ajax.reload();
                     },
-                    error: function () {
-                        alert('Thao tác thất bại!');
-                    }
+                    // error: function () {
+                    //     alert('Thao tác thất bại!');
+                    // },
+                    error: function (xhr) {
+                        if (xhr.status === 403) {
+                            const msg = xhr.responseJSON?.message || 'Lỗi không xác định';
+                            alert(msg); // hoặc toast(msg)
+                        }
+                    },
                 });
             }
         }
