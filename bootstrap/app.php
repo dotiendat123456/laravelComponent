@@ -22,6 +22,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'check.user.status' => CheckUserStatus::class,
             'admin' => CheckAdmin::class,
         ]);
+        // // Khai báo Middleware Group
+        // $middleware->group('admin.area', [
+        //     CheckUserStatus::class,
+        //     CheckAdmin::class,
+        // ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

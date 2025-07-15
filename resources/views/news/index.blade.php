@@ -43,21 +43,28 @@
 
 @push('scripts')
     <script>
+        // Khi người dùng bấm vào link phân trang trong #posts-list
         $(document).on('click', '#posts-list .pagination a', function (e) {
-            e.preventDefault();
-            let url = $(this).attr('href');
+            e.preventDefault(); // Ngăn hành vi chuyển trang mặc định (load trang mới)
 
+            let url = $(this).attr('href'); // Lấy URL của link phân trang
+
+            // Gọi Ajax GET đến URL đó
             $.get(url, function (data) {
-                // Lấy HTML fragment thôi → Laravel trả về view đầy đủ
-                // Nên chỉ lấy phần #posts-list của response
+
+                // Do server trả về view đầy đủ (kể cả layout), ta chỉ lấy phần #posts-list
                 let html = $(data).find('#posts-list').html();
+
+                // Thay thế nội dung hiện tại của #posts-list bằng nội dung mới
                 $('#posts-list').html(html);
             }).fail(function () {
+                // Nếu có lỗi khi load dữ liệu
                 alert('Lỗi khi tải trang.');
             });
         });
     </script>
 @endpush
+
 
 
 @push('styles')

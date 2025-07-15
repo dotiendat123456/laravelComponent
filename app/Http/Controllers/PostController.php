@@ -158,13 +158,14 @@ class PostController extends Controller
 
     public function publicIndex()
     {
-        $posts = Post::where('status', PostStatus::APPROVED->value)
+        $posts = Post::status(PostStatus::APPROVED->value)
             ->where('publish_date', '<=', now())
             ->latest('publish_date')
             ->paginate(2);
 
         return view('news.index', compact('posts'));
     }
+
 
 
 
@@ -256,11 +257,8 @@ class PostController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user) {
-            return back()->withErrors(['error' => 'Bạn chưa đăng nhập']);
-        }
 
-        if ($user->posts()->count() === 0) {
+        if ($user->posts->count() === 0) {
             return back()->withErrors(['error' => 'Không có bài viết nào để xoá']);
         }
 
