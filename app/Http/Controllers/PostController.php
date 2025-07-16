@@ -30,33 +30,44 @@ class PostController extends Controller
 
     public function data(Request $request)
     {
+        // Nếu request không phải là Ajax thì trả về lỗi 403 (bảo vệ API khỏi truy cập không hợp lệ)
         if (! $request->ajax()) {
             abort(403, 'Không hợp lệ.');
         }
+
+        // Lấy thông tin user hiện đang đăng nhập
         $user = Auth::user();
 
+        // Lấy danh sách bài viết của user đó, eager load thêm 'media' (nếu dùng Spatie Media Library)
         $query = $user->posts()->with('media');
 
+        // Nếu có tham số tìm kiếm (search box DataTables), lọc theo title hoặc description
         if ($request->filled('search.value')) {
             $search = $request->input('search.value');
+
+            // Thêm điều kiện tìm kiếm bằng cách gộp nhiều where bằng orWhere
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
+        // Ánh xạ cột bên DataTables sang cột trong CSDL
+        // Chú ý: 'thumbnail' là cột hiển thị ảnh, không sắp xếp được
         $columns = [
             0 => 'id',
-            1 => 'thumbnail',
+            1 => 'thumbnail',       // Không thực sự tồn tại trong DB, chỉ dùng hiển thị
             2 => 'title',
             3 => 'description',
             4 => 'publish_date',
             5 => 'status',
         ];
 
+        // Lấy thông tin cột cần sắp xếp từ request gửi lên (order[0][column], order[0][dir])
         $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir', 'asc');
+        $orderDir = $request->input('order.0.dir', 'asc'); // Mặc định là ASC nếu không có
 
+        // Kiểm tra nếu không có cột sắp xếp hợp lệ hoặc đang sắp xếp theo 'thumbnail' → sắp theo id DESC mặc định
         if (
             $orderColIndex === null ||
             !isset($columns[$orderColIndex]) ||
@@ -64,22 +75,34 @@ class PostController extends Controller
         ) {
             $query->orderByDesc('id');
         } else {
+            // Ngược lại thì sắp xếp theo cột tương ứng do client gửi lên
             $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
+        // Phân trang:
+
+        // Số bản ghi mỗi trang (mặc định 10 nếu client không gửi lên)
         $length = intval($request->input('length', 10));
+
+        // Vị trí bắt đầu (start) theo DataTables
         $start = intval($request->input('start', 0));
+
+        // Tính số trang hiện tại
+        // Do paginate trong Laravel nhận số trang chứ không phải offset nên phải tính
         $page = ($start / $length) + 1;
 
+        // Lấy dữ liệu phân trang với thông tin page hiện tại và perPage = length
         $posts = $query->paginate($length, ['*'], 'page', $page);
 
+        // Trả về JSON đúng chuẩn định dạng DataTables expects
         return response()->json([
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => $posts->total(),
-            'recordsFiltered' => $posts->total(),
-            'data' => PostResource::collection($posts)->resolve(),
+            'draw' => intval($request->input('draw')),           // Tham số dùng để đồng bộ với client
+            'recordsTotal' => $posts->total(),                    // Tổng số bản ghi (không phân trang)
+            'recordsFiltered' => $posts->total(),                 // Số bản ghi sau khi filter (ở đây bằng luôn vì không tách riêng total với filtered, nếu có filter khác cần tách)
+            'data' => PostResource::collection($posts)->resolve(), // Dữ liệu dạng mảng (nhờ PostResource)
         ]);
     }
+
 
 
 

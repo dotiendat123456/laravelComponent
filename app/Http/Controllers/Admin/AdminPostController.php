@@ -36,56 +36,72 @@ class AdminPostController extends Controller
 
     public function data(Request $request)
     {
+        // Kiểm tra xem request có phải là Ajax không. Nếu không phải thì trả về lỗi 403.
         if (! $request->ajax()) {
             abort(403, 'Không hợp lệ.');
         }
+
+        // Định nghĩa các cột ánh xạ theo thứ tự cột bên client DataTables gửi lên
         $columns = [
-            0 => 'posts.id',
-            1 => 'posts.title',
-            2 => 'users.email',
-            3 => 'posts.status',
-            4 => 'posts.created_at',
+            0 => 'posts.id',          // ID bài viết
+            1 => 'posts.title',       // Tiêu đề bài viết
+            2 => 'users.email',       // Email người tạo bài viết (cần join bảng users)
+            3 => 'posts.status',      // Trạng thái bài viết
+            4 => 'posts.created_at',  // Ngày tạo
         ];
 
-        $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir', 'asc');
-        $orderColumn = $columns[$orderColIndex] ?? 'posts.id';
+        // Lấy thông tin sắp xếp từ request
+        $orderColIndex = $request->input('order.0.column'); // Lấy chỉ số cột sắp xếp
+        $orderDir = $request->input('order.0.dir', 'asc');  // Lấy kiểu sắp xếp (asc|desc), mặc định asc
+        $orderColumn = $columns[$orderColIndex] ?? 'posts.id'; // Nếu không có thì sắp theo posts.id
 
+        // Khởi tạo query cơ bản từ bảng posts
         $query = Post::query();
 
+        // Xác định xem có cần join bảng users không
+        // Nếu sắp xếp theo email hoặc có filter theo email thì bắt buộc phải join
         $needJoin = $orderColumn === 'users.email' || $request->filled('email');
 
         if ($needJoin) {
+            // Thực hiện join bảng users để lấy thông tin email người viết bài
             $query->join('users', 'posts.user_id', '=', 'users.id')
-                ->select('posts.*', 'users.email as user_email')
-                ->groupBy('posts.id');
+                ->select('posts.*', 'users.email as user_email') // Lấy tất cả cột của posts và thêm users.email
+                ->groupBy('posts.id'); // Tránh lỗi khi dùng join + select nhiều bảng (MySQL yêu cầu groupBy)
         } else {
+            // Nếu không cần join thì eager load quan hệ user để lấy email sau này
             $query->with('user');
         }
 
+        // Lọc theo tiêu đề nếu có input title gửi lên
         if ($request->filled('title')) {
             $query->where('posts.title', 'like', "%{$request->title}%");
         }
 
+        // Lọc theo email nếu có input email gửi lên (chỉ dùng được khi đã join)
         if ($request->filled('email')) {
             $query->where('users.email', 'like', "%{$request->email}%");
         }
 
+        // Thêm điều kiện sắp xếp vào query
         $query->orderBy($orderColumn, $orderDir);
 
-        $length = intval($request->input('length', 10));
-        $start = intval($request->input('start', 0));
-        $page = ($start / $length) + 1;
+        // Lấy thông tin phân trang từ request
+        $length = intval($request->input('length', 10)); // Số bản ghi mỗi trang, mặc định 10
+        $start = intval($request->input('start', 0));    // Offset bắt đầu lấy bản ghi
+        $page = ($start / $length) + 1;                   // Tính số trang hiện tại (vì paginate của Laravel dùng page)
 
+        // Lấy dữ liệu với phân trang
         $posts = $query->paginate($length, ['*'], 'page', $page);
 
+        // Trả về dữ liệu dưới dạng JSON đúng chuẩn DataTables yêu cầu
         return response()->json([
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => Post::count(),
-            'recordsFiltered' => (clone $query)->getCountForPagination(),
-            'data' => PostResource::collection($posts)->resolve(),
+            'draw' => intval($request->input('draw')),               // Biến draw giúp client đồng bộ các request liên tiếp
+            'recordsTotal' => Post::count(),                         // Tổng số bản ghi không filter
+            'recordsFiltered' => (clone $query)->getCountForPagination(), // Tổng số bản ghi sau khi filter
+            'data' => PostResource::collection($posts)->resolve(),   // Dữ liệu bài viết, qua PostResource để format lại
         ]);
     }
+
 
 
 
