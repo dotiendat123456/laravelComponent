@@ -133,7 +133,7 @@
                 type: 'POST',
                 data: {
                     _method: 'DELETE',
-                    _token: '{{ csrf_token() }}'
+                    _token: @json(csrf_token())
                 },
                 success: function () {
                     table.ajax.reload();
@@ -152,7 +152,7 @@
                 type: 'POST',
                 data: {
                     _method: 'DELETE',
-                    _token: '{{ csrf_token() }}'
+                    _token: @json(csrf_token())
                 },
                 success: function () {
                     table.ajax.reload();

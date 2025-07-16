@@ -81,7 +81,7 @@ class PostController extends Controller
                 return [
                     'id' => $post->id,
                     'slug' => $post->slug,
-                    'thumbnail' => $post->getFirstMediaUrl('thumbnails'),
+                    'thumbnail' => $post->thumbnail,
                     'title' => $post->title,
                     'description' => Str::limit($post->description, 50),
                     'publish_date' => optional($post->publish_date)->format('d/m/Y'),

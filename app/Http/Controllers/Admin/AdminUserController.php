@@ -72,7 +72,7 @@ class AdminUserController extends Controller
                     'email' => $user->email,
                     'address' => $user->address,
 
-                    // 👇 Không render HTML trực tiếp
+                    //  Không render HTML trực tiếp
                     'status_value' => $user->status->value,
                     'status_label' => $user->status->label(),
 

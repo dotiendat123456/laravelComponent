@@ -104,26 +104,31 @@
                         searchable: false,
                         render: function (data, type, row) {
                             const editUrl = "{{ route('admin.users.edit', ':id') }}".replace(':id', row.id);
+                            let buttons = '';
 
-                            let toggleBtn = '';
+                            // Không cho phép chỉnh sửa chính mình
+                            if (row.id !== @json(Auth::id())) {
+                                buttons += `<a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
+                                    <i class="fa-solid fa-edit"></i> Sửa
+                                </a>`;
 
-                            if (row.status_value === 3) {
-                                toggleBtn = `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
-                                                                    <i class="fa-solid fa-lock-open"></i> Mở khóa
-                                                                 </button>`;
+                                if (row.status_value === 3) {
+                                    buttons += `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
+                                        <i class="fa-solid fa-lock-open"></i> Mở khóa
+                                    </button>`;
+                                } else {
+                                    buttons += `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
+                                        <i class="fa-solid fa-lock"></i> Khóa
+                                    </button>`;
+                                }
                             } else {
-                                toggleBtn = `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
-                                                                    <i class="fa-solid fa-lock"></i> Khóa
-                                                                 </button>`;
+                                // Nếu là chính mình chỉ hiển thị dấu gạch ngang hoặc không hiển thị gì
+                                buttons += `<span class="text-muted"></span>`;
                             }
 
-                            return `
-                                                    <a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                                        <i class="fa-solid fa-edit"></i> Sửa
-                                                    </a>
-                                                    ${toggleBtn}
-                                                `;
+                            return buttons;
                         }
+
                     }
                 ],
 
@@ -148,7 +153,7 @@
                     url: "{{ route('admin.users.toggleStatus', ':id') }}".replace(':id', id),
                     type: 'POST',
                     data: {
-                        _token: '{{ csrf_token() }}',
+                        _token: @json(csrf_token()),
                         action: action
                     },
                     success: function () {

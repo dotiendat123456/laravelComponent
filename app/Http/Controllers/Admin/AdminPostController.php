@@ -121,22 +121,10 @@ class AdminPostController extends Controller
         DB::beginTransaction();
 
         try {
-            // Tạo slug từ title
-            $slug = Str::slug($request->title);
-
-            // Kiểm tra slug có trùng không, nếu có thì thêm số tăng dần
-            $originalSlug = $slug;
-            $count = 1;
-
-            while (Post::where('slug', $slug)->exists()) {
-                $slug = $originalSlug . '-' . $count++;
-            }
-
             // Tạo bài viết
             $post = Post::create([
                 'user_id' => Auth::id(),
                 'title' => $request->title,
-                'slug' => $slug,
                 'description' => $request->description,
                 'content' => $request->content,
                 'publish_date' => $request->publish_date,
