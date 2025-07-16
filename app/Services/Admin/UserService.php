@@ -16,9 +16,10 @@ class UserService
      */
     public function getUsersData(Request $request)
     {
+        // Khởi tạo query lấy danh sách tất cả người dùng
         $query = User::query();
 
-        // Lọc theo tên (first_name + last_name)
+        // Lọc theo tên đầy đủ (gộp first_name + last_name)
         if ($request->filled('name')) {
             $query->whereRaw(
                 "CONCAT(first_name, ' ', last_name) LIKE ?",
@@ -31,28 +32,31 @@ class UserService
             $query->where('email', 'like', "%{$request->email}%");
         }
 
-        // Cấu hình sắp xếp cột
+        // Các cột có thể sắp xếp được trong bảng DataTables
         $columns = [
-            0 => 'first_name',
-            1 => 'email',
-            2 => 'address',
-            3 => 'status',
+            0 => 'first_name', // Cột tên
+            1 => 'email',      // Cột email
+            2 => 'address',    // Cột địa chỉ
+            3 => 'status',     // Cột trạng thái
         ];
 
-        $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir', 'asc');
+        // Lấy thông tin sắp xếp từ DataTables
+        $orderColIndex = $request->input('order.0.column'); // Vị trí cột được sắp xếp
+        $orderDir = $request->input('order.0.dir', 'asc');  // Chiều sắp xếp (asc/desc), mặc định là asc
 
+        // Nếu không có cột sắp xếp hoặc không hợp lệ thì mặc định sắp xếp theo ID giảm dần (mới nhất lên đầu)
         if ($orderColIndex === null || !isset($columns[$orderColIndex])) {
             $query->orderByDesc('id');
         } else {
             $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        // Phân trang
-        $length = intval($request->input('length', 10));
-        $start = intval($request->input('start', 0));
-        $page = ($start / $length) + 1;
+        // Xử lý phân trang theo chuẩn DataTables
+        $length = intval($request->input('length', 10)); // Số lượng bản ghi mỗi trang (default 10)
+        $start = intval($request->input('start', 0));    // Vị trí bắt đầu (offset)
+        $page = ($start / $length) + 1;                  // Tính số trang hiện tại
 
+        // Trả về danh sách người dùng đã phân trang
         return $query->paginate($length, ['*'], 'page', $page);
     }
 

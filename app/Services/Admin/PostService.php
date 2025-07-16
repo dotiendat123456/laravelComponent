@@ -18,44 +18,59 @@ class PostService
      */
     public function getPostsData(Request $request)
     {
+        // Khai báo các cột có thể sắp xếp, tương ứng với chỉ số cột DataTables
         $columns = [
-            0 => 'posts.id',
-            1 => 'posts.title',
-            2 => 'users.email',
-            3 => 'posts.status',
-            4 => 'posts.created_at',
+            0 => 'posts.id',         // Cột ID bài viết
+            1 => 'posts.title',      // Cột tiêu đề bài viết
+            2 => 'users.email',      // Cột email người dùng
+            3 => 'posts.status',     // Cột trạng thái bài viết
+            4 => 'posts.created_at', // Cột ngày tạo bài viết
         ];
 
-        $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir', 'asc');
-        $orderColumn = $columns[$orderColIndex] ?? 'posts.id';
+        // Lấy cột sắp xếp và chiều sắp xếp từ request
+        $orderColIndex = $request->input('order.0.column'); // Chỉ số cột cần sắp xếp
+        $orderDir = $request->input('order.0.dir', 'asc');  // Chiều sắp xếp (asc/desc)
+        $orderColumn = $columns[$orderColIndex] ?? 'posts.id'; // Nếu không có thì mặc định là sắp xếp theo ID
 
+        // Khởi tạo query cơ bản từ bảng posts
         $query = Post::query();
 
+        /**
+         * Khi nào cần JOIN bảng users?
+         * - Nếu sắp xếp theo email (users.email).
+         * - Hoặc đang tìm kiếm theo email người dùng.
+         */
         $needJoin = $orderColumn === 'users.email' || $request->filled('email');
 
         if ($needJoin) {
+            // Join bảng users để truy vấn email và group by theo posts.id để tránh lỗi MySQL
             $query->join('users', 'posts.user_id', '=', 'users.id')
-                ->select('posts.*', 'users.email as user_email')
+                ->select('posts.*', 'users.email as user_email') // Lấy cả email để hiển thị
                 ->groupBy('posts.id');
         } else {
+            // Nếu không cần join thì eager load user để tránh N+1 query khi hiển thị user
             $query->with('user');
         }
 
+        // Lọc theo tiêu đề bài viết
         if ($request->filled('title')) {
             $query->where('posts.title', 'like', "%{$request->title}%");
         }
 
+        // Lọc theo email người dùng (chỉ khi có join)
         if ($request->filled('email')) {
             $query->where('users.email', 'like', "%{$request->email}%");
         }
 
+        // Sắp xếp theo cột được yêu cầu
         $query->orderBy($orderColumn, $orderDir);
 
-        $length = intval($request->input('length', 10));
-        $start = intval($request->input('start', 0));
-        $page = ($start / $length) + 1;
+        // Phân trang theo chuẩn DataTables
+        $length = intval($request->input('length', 10)); // Số bản ghi mỗi trang
+        $start = intval($request->input('start', 0));    // Offset bắt đầu
+        $page = ($start / $length) + 1;                  // Tính số trang
 
+        // Trả về dữ liệu đã phân trang
         return $query->paginate($length, ['*'], 'page', $page);
     }
 

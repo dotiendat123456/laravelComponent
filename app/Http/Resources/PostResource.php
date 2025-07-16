@@ -18,7 +18,7 @@ class PostResource extends JsonResource
         return [
             'id' => $this->id,
             'slug' => $this->slug,
-            'thumbnail' => $this->getFirstMediaUrl('thumbnails') ?? $this->thumbnail,
+            'thumbnail' => $this->thumbnail,
             'title' => $this->title,
             'description' => Str::limit($this->description, 50),
             'publish_date' => optional($this->publish_date)->format('d/m/Y'),

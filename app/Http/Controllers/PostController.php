@@ -36,17 +36,20 @@ class PostController extends Controller
      */
     public function data(Request $request)
     {
+        // Kiểm tra xem request có phải là AJAX không
         if (! $request->ajax()) {
-            abort(403, 'Không hợp lệ.');
+            abort(403, 'Không hợp lệ.'); // Trả về lỗi 403 nếu request không hợp lệ
         }
 
+        // Gọi service để lấy danh sách bài viết của user hiện tại (đã phân trang, tìm kiếm, sắp xếp)
         $posts = $this->postService->getUserPostsData($request);
 
+        // Trả về dữ liệu theo format chuẩn của DataTables
         return response()->json([
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => $posts->total(),
-            'recordsFiltered' => $posts->total(),
-            'data' => PostResource::collection($posts)->resolve(),
+            'draw' => intval($request->input('draw')), // Số lần gọi AJAX, dùng để phân biệt các lần request
+            'recordsTotal' => $posts->total(), // Tổng số bài viết (trước khi filter)
+            'recordsFiltered' => $posts->total(), // Số bản ghi sau khi filter (ở đây bằng luôn total do đã filter trong Service)
+            'data' => PostResource::collection($posts)->resolve(), // Chuyển dữ liệu bài viết thành resource JSON
         ]);
     }
 

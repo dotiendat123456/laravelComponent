@@ -35,17 +35,20 @@ class AdminUserController extends Controller
      */
     public function data(Request $request)
     {
+        // Kiểm tra xem có phải request AJAX không, nếu không thì trả về lỗi 403.
         if (! $request->ajax()) {
             abort(403, 'Không hợp lệ.');
         }
 
+        // Gọi UserService để lấy danh sách user (đã áp dụng tìm kiếm, phân trang, sắp xếp nếu có)
         $users = $this->userService->getUsersData($request);
 
+        // Trả về JSON response cho DataTables với cấu trúc chuẩn
         return response()->json([
-            'draw' => intval($request->input('draw')),
-            'recordsTotal' => $users->total(),
-            'recordsFiltered' => $users->total(),
-            'data' => UserResource::collection($users)->resolve(),
+            'draw' => intval($request->input('draw')), // Đảm bảo đúng số lần request, phục vụ DataTables đồng bộ hóa
+            'recordsTotal' => $users->total(), // Tổng số user trước khi filter
+            'recordsFiltered' => $users->total(), // Tổng số user sau khi filter (trong ví dụ này là như nhau, nhưng có thể khác nếu thực sự filter)
+            'data' => UserResource::collection($users)->resolve(), // Chuyển đổi dữ liệu user sang Resource để trả về frontend
         ]);
     }
 
