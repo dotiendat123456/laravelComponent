@@ -14,7 +14,7 @@ use App\Enums\UserRole;
 use App\Enums\PostStatus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-
+use App\Http\Resources\PostResource;
 
 
 
@@ -27,15 +27,13 @@ class PostController extends Controller
     }
 
 
+
     public function data(Request $request)
     {
-        // Lấy người dùng đang đăng nhập
         $user = Auth::user();
 
-        // Query gốc: chỉ lấy các bài viết thuộc về user đó
-        $query = $user->posts()->with('media'); // Eager load media nếu dùng Spatie Media Library
+        $query = $user->posts()->with('media');
 
-        // Nếu có tìm kiếm, áp dụng điều kiện tìm kiếm theo title hoặc description
         if ($request->filled('search.value')) {
             $search = $request->input('search.value');
             $query->where(function ($q) use ($search) {
@@ -44,21 +42,18 @@ class PostController extends Controller
             });
         }
 
-        // Định nghĩa thứ tự các cột, cần khớp với mảng columns của DataTables JS
         $columns = [
             0 => 'id',
-            1 => 'thumbnail',    // Cột này chỉ hiển thị, không sắp xếp
+            1 => 'thumbnail',
             2 => 'title',
             3 => 'description',
             4 => 'publish_date',
             5 => 'status',
         ];
 
-        // Xác định cột được yêu cầu sắp xếp và hướng sắp xếp (asc/desc)
         $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir');
+        $orderDir = $request->input('order.0.dir', 'asc');
 
-        // Nếu không có cột hoặc cột đó là thumbnail thì fallback sắp theo ID giảm dần
         if (
             $orderColIndex === null ||
             !isset($columns[$orderColIndex]) ||
@@ -69,36 +64,19 @@ class PostController extends Controller
             $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        // Lấy số bản ghi trên mỗi trang và tính toán trang hiện tại theo DataTables
         $length = intval($request->input('length', 10));
         $start = intval($request->input('start', 0));
         $page = ($start / $length) + 1;
 
-        // Sử dụng paginate để Laravel tự xử lý limit và offset
-        // Sử dụng through() để chuẩn hoá dữ liệu trước khi trả ra
-        $posts = $query->paginate($length, ['*'], 'page', $page)
-            ->through(function ($post) {
-                return [
-                    'id' => $post->id,
-                    'slug' => $post->slug,
-                    'thumbnail' => $post->thumbnail,
-                    'title' => $post->title,
-                    'description' => Str::limit($post->description, 50),
-                    'publish_date' => optional($post->publish_date)->format('d/m/Y'),
-                    'status' => $post->status->label(),
-                ];
-            });
+        $posts = $query->paginate($length, ['*'], 'page', $page);
 
-        // Trả về JSON đúng cấu trúc mà DataTables server-side yêu cầu
         return response()->json([
-            'draw' => intval($request->input('draw')),         // Tham số để DataTables đồng bộ thứ tự Ajax
-            'recordsTotal' => $posts->total(),                 // Tổng số bản ghi gốc (chưa lọc)
-            'recordsFiltered' => $posts->total(),              // Tổng số bản ghi sau khi áp dụng filter
-            'data' => $posts->items(),                         // Dữ liệu đã được chuẩn hoá
+            'draw' => intval($request->input('draw')),
+            'recordsTotal' => $posts->total(),
+            'recordsFiltered' => $posts->total(),
+            'data' => PostResource::collection($posts)->resolve(),
         ]);
     }
-
-
 
 
 

@@ -11,6 +11,7 @@ use App\Enums\UserStatus;
 use App\Enums\UserRole;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Admin\UserResource;
 
 
 class AdminUserController extends Controller
@@ -22,23 +23,18 @@ class AdminUserController extends Controller
 
 
 
-
     public function data(Request $request)
     {
-        // B1: Query gốc lấy toàn bộ users
         $query = User::query();
 
-        // B2: Lọc theo tên (ghép first_name + last_name)
         if ($request->filled('name')) {
             $query->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$request->name}%"]);
         }
 
-        // B3: Lọc theo email
         if ($request->filled('email')) {
             $query->where('email', 'like', "%{$request->email}%");
         }
 
-        // B4: Định nghĩa cột cho phép sắp xếp
         $columns = [
             0 => 'first_name',
             1 => 'email',
@@ -46,9 +42,8 @@ class AdminUserController extends Controller
             3 => 'status',
         ];
 
-        // B5: Xử lý sort nếu có
         $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir');
+        $orderDir = $request->input('order.0.dir', 'asc');
 
         if (
             $orderColIndex === null ||
@@ -59,37 +54,19 @@ class AdminUserController extends Controller
             $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        // B6: Phân trang chuẩn DataTables
         $length = intval($request->input('length', 10));
         $start = intval($request->input('start', 0));
         $page = ($start / $length) + 1;
 
-        // B7: Chuẩn hoá dữ liệu qua through
-        $users = $query->paginate($length, ['*'], 'page', $page)
-            ->through(function ($user) {
-                return [
-                    'name' => $user->first_name . ' ' . $user->last_name,
-                    'email' => $user->email,
-                    'address' => $user->address,
+        $users = $query->paginate($length, ['*'], 'page', $page);
 
-                    //  Không render HTML trực tiếp
-                    'status_value' => $user->status->value,
-                    'status_label' => $user->status->label(),
-
-                    'id' => $user->id,
-                ];
-            });
-
-        // B8: Trả JSON chuẩn DataTables
         return response()->json([
             'draw' => intval($request->input('draw')),
             'recordsTotal' => $users->total(),
             'recordsFiltered' => $users->total(),
-            'data' => $users->items(),
+            'data' => UserResource::collection($users)->resolve(),
         ]);
     }
-
-
 
 
 

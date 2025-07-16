@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Enums\PostStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Admin\PostResource;
 
 
 class AdminPostController extends Controller
@@ -35,72 +36,54 @@ class AdminPostController extends Controller
 
     public function data(Request $request)
     {
-        // Tạo query gốc lấy tất cả bài viết, eager load quan hệ user (tác giả)
-        $query = Post::with('user');
-
-        // Nếu có tham số 'title', thêm điều kiện tìm kiếm theo tiêu đề
-        if ($request->filled('title')) {
-            $query->where('title', 'like', "%{$request->title}%");
-        }
-
-        // Nếu có tham số 'email', lọc theo email user
-        if ($request->filled('email')) {
-            $query->whereHas('user', function ($q) use ($request) {
-                $q->where('email', 'like', "%{$request->email}%");
-            });
-        }
-
-        // Định nghĩa ánh xạ index cột của DataTables sang tên cột DB
         $columns = [
-            0 => 'id',
-            1 => 'title',
-            2 => 'users.email',  // Email nằm ở bảng users
-            3 => 'status',
-            4 => 'created_at',
+            0 => 'posts.id',
+            1 => 'posts.title',
+            2 => 'users.email',
+            3 => 'posts.status',
+            4 => 'posts.created_at',
         ];
 
-        // Lấy index cột sắp xếp và chiều sắp xếp
         $orderColIndex = $request->input('order.0.column');
         $orderDir = $request->input('order.0.dir', 'asc');
+        $orderColumn = $columns[$orderColIndex] ?? 'posts.id';
 
-        // Xác định tên cột sẽ sort
-        $orderColumn = $columns[$orderColIndex] ?? 'id';
+        $query = Post::query();
 
-        // Nếu sort theo email cần join bảng users
-        if ($orderColumn === 'users.email') {
+        $needJoin = $orderColumn === 'users.email' || $request->filled('email');
+
+        if ($needJoin) {
             $query->join('users', 'posts.user_id', '=', 'users.id')
-                ->orderBy('users.email', $orderDir)
-                ->select('posts.*'); // Tránh lỗi khi join
+                ->select('posts.*', 'users.email as user_email')
+                ->groupBy('posts.id');
         } else {
-            $query->orderBy($orderColumn, $orderDir);
+            $query->with('user');
         }
 
-        // Tính số trang từ DataTables (start + length)
+        if ($request->filled('title')) {
+            $query->where('posts.title', 'like', "%{$request->title}%");
+        }
+
+        if ($request->filled('email')) {
+            $query->where('users.email', 'like', "%{$request->email}%");
+        }
+
+        $query->orderBy($orderColumn, $orderDir);
+
         $length = intval($request->input('length', 10));
         $start = intval($request->input('start', 0));
         $page = ($start / $length) + 1;
 
-        // Dùng paginate + through để chuẩn hoá dữ liệu trả ra
-        $posts = $query->paginate($length, ['*'], 'page', $page)
-            ->through(function ($post) {
-                return [
-                    'id' => $post->id,
-                    'title' => $post->title,
-                    'email' => $post->user->email ?? '-', // Nếu chưa join thì đã eager load user
-                    'status' => $post->status->label(),
-                    'created_at' => $post->created_at->format('d/m/Y'),
-                    'slug' => $post->slug,
-                ];
-            });
+        $posts = $query->paginate($length, ['*'], 'page', $page);
 
-        // Trả JSON đúng chuẩn DataTables yêu cầu
         return response()->json([
             'draw' => intval($request->input('draw')),
-            'recordsTotal' => Post::count(),      // Tổng bản ghi gốc (chưa filter)
-            'recordsFiltered' => $posts->total(), // Tổng bản ghi sau filter
-            'data' => $posts->items(),            // Dữ liệu trang hiện tại đã chuẩn hoá
+            'recordsTotal' => Post::count(),
+            'recordsFiltered' => (clone $query)->getCountForPagination(),
+            'data' => PostResource::collection($posts)->resolve(),
         ]);
     }
+
 
 
 
