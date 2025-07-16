@@ -2,260 +2,171 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Models\Post;
-use App\Models\User;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Requests\Admin\AdminStorePostRequest;
-use App\Http\Requests\Admin\AdminUpdatePostRequest;
-use Illuminate\Support\Str;
-use App\Enums\UserRole;
-use App\Jobs\NotifyUserPostStatusJob;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Enums\PostStatus;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\Admin\PostResource;
-
+use App\Models\Post;                                // Model bài viết
+use App\Http\Controllers\Controller;                // Kế thừa Controller gốc của Laravel
+use App\Http\Requests\Admin\AdminStorePostRequest;  // Form Request validate khi tạo bài viết
+use App\Http\Requests\Admin\AdminUpdatePostRequest; // Form Request validate khi update bài viết
+use App\Http\Resources\Admin\PostResource;          // Resource định dạng data cho DataTables
+use App\Services\Admin\PostService;                 // Service xử lý nghiệp vụ bài viết admin
+use Illuminate\Http\Request;                        // Request HTTP
+use Illuminate\Support\Facades\Auth;                // Lấy user đang đăng nhập
+use Illuminate\Support\Facades\Log;                 // Ghi log
 
 class AdminPostController extends Controller
 {
+    protected $postService;
+
+    /**
+     * Inject PostService vào Controller bằng DI (Dependency Injection).
+     */
+    public function __construct(PostService $postService)
+    {
+        $this->postService = $postService;
+    }
+
+    /**
+     * Hiển thị dashboard quản lý bài viết.
+     */
     public function dashboard()
     {
         return view('admin.posts.dashboard');
     }
 
-
+    /**
+     * Hiển thị danh sách bài viết admin.
+     * Data sẽ load qua Ajax (dataTable).
+     */
     public function index()
     {
         return view('admin.posts.index');
     }
 
-
-
+    /**
+     * Trả về dữ liệu bài viết cho DataTables (Ajax).
+     * Có phân trang, lọc, sắp xếp.
+     */
     public function data(Request $request)
     {
-        // Kiểm tra xem request có phải là Ajax không. Nếu không phải thì trả về lỗi 403.
+        // Check nếu không phải Ajax thì trả về lỗi 403
         if (! $request->ajax()) {
             abort(403, 'Không hợp lệ.');
         }
 
-        // Định nghĩa các cột ánh xạ theo thứ tự cột bên client DataTables gửi lên
-        $columns = [
-            0 => 'posts.id',          // ID bài viết
-            1 => 'posts.title',       // Tiêu đề bài viết
-            2 => 'users.email',       // Email người tạo bài viết (cần join bảng users)
-            3 => 'posts.status',      // Trạng thái bài viết
-            4 => 'posts.created_at',  // Ngày tạo
-        ];
+        // Gọi Service để lấy data bài viết
+        $posts = $this->postService->getPostsData($request);
 
-        // Lấy thông tin sắp xếp từ request
-        $orderColIndex = $request->input('order.0.column'); // Lấy chỉ số cột sắp xếp
-        $orderDir = $request->input('order.0.dir', 'asc');  // Lấy kiểu sắp xếp (asc|desc), mặc định asc
-        $orderColumn = $columns[$orderColIndex] ?? 'posts.id'; // Nếu không có thì sắp theo posts.id
-
-        // Khởi tạo query cơ bản từ bảng posts
-        $query = Post::query();
-
-        // Xác định xem có cần join bảng users không
-        // Nếu sắp xếp theo email hoặc có filter theo email thì bắt buộc phải join
-        $needJoin = $orderColumn === 'users.email' || $request->filled('email');
-
-        if ($needJoin) {
-            // Thực hiện join bảng users để lấy thông tin email người viết bài
-            $query->join('users', 'posts.user_id', '=', 'users.id')
-                ->select('posts.*', 'users.email as user_email') // Lấy tất cả cột của posts và thêm users.email
-                ->groupBy('posts.id'); // Tránh lỗi khi dùng join + select nhiều bảng (MySQL yêu cầu groupBy)
-        } else {
-            // Nếu không cần join thì eager load quan hệ user để lấy email sau này
-            $query->with('user');
-        }
-
-        // Lọc theo tiêu đề nếu có input title gửi lên
-        if ($request->filled('title')) {
-            $query->where('posts.title', 'like', "%{$request->title}%");
-        }
-
-        // Lọc theo email nếu có input email gửi lên (chỉ dùng được khi đã join)
-        if ($request->filled('email')) {
-            $query->where('users.email', 'like', "%{$request->email}%");
-        }
-
-        // Thêm điều kiện sắp xếp vào query
-        $query->orderBy($orderColumn, $orderDir);
-
-        // Lấy thông tin phân trang từ request
-        $length = intval($request->input('length', 10)); // Số bản ghi mỗi trang, mặc định 10
-        $start = intval($request->input('start', 0));    // Offset bắt đầu lấy bản ghi
-        $page = ($start / $length) + 1;                   // Tính số trang hiện tại (vì paginate của Laravel dùng page)
-
-        // Lấy dữ liệu với phân trang
-        $posts = $query->paginate($length, ['*'], 'page', $page);
-
-        // Trả về dữ liệu dưới dạng JSON đúng chuẩn DataTables yêu cầu
+        // Trả về JSON chuẩn cho DataTables
         return response()->json([
-            'draw' => intval($request->input('draw')),               // Biến draw giúp client đồng bộ các request liên tiếp
-            'recordsTotal' => Post::count(),                         // Tổng số bản ghi không filter
-            'recordsFiltered' => (clone $query)->getCountForPagination(), // Tổng số bản ghi sau khi filter
-            'data' => PostResource::collection($posts)->resolve(),   // Dữ liệu bài viết, qua PostResource để format lại
+            'draw' => intval($request->input('draw')), // Biến giúp DataTables phân biệt request
+            'recordsTotal' => Post::count(),            // Tổng số bài viết
+            'recordsFiltered' => $posts->total(),       // Tổng số sau khi filter
+            'data' => PostResource::collection($posts)->resolve(), // Format data qua Resource
         ]);
     }
 
-
-
-
-
-
-
+    /**
+     * Hiển thị form tạo bài viết.
+     */
     public function create()
     {
-        $this->authorize('create', Post::class);
+        $this->authorize('create', Post::class); // Kiểm tra quyền
+
         return view('admin.posts.create');
     }
 
-
-
+    /**
+     * Lưu bài viết mới từ form.
+     */
     public function store(AdminStorePostRequest $request)
     {
         $this->authorize('create', Post::class);
 
-        DB::beginTransaction();
-
         try {
-            // Tạo bài viết
-            $post = Post::create([
-                'user_id' => Auth::id(),
-                'title' => $request->title,
-                'description' => $request->description,
-                'content' => $request->content,
-                'publish_date' => $request->publish_date,
-                'status' => PostStatus::APPROVED,
-            ]);
-
-            // Nếu có thumbnail thì lưu bằng Spatie Media
-            if ($request->hasFile('thumbnail')) {
-                $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
-            }
-
-            DB::commit();
+            // Gọi Service để tạo bài viết
+            $this->postService->createPost(
+                $request->validated(),                 // Dữ liệu hợp lệ
+                $request->file('thumbnail')            // File ảnh
+            );
 
             return to_route('admin.posts.index')->with('success', 'Tạo bài viết thành công');
         } catch (\Throwable $e) {
-            DB::rollBack();
-
             Log::error('Lỗi tạo bài viết: ' . $e->getMessage());
 
-            return back()->withErrors(['error' => 'Đã xảy ra lỗi khi tạo bài viết, vui lòng thử lại!']);
+            return back()->withErrors(['error' => 'Đã xảy ra lỗi khi tạo bài viết']);
         }
     }
 
-
-
     /**
-     * Display the specified resource.
+     * Hiển thị form chỉnh sửa bài viết.
      */
-    public function show(string $id)
-    {
-        //
-    }
-
-
-
     public function edit(Post $post)
     {
-        $this->authorize('update', $post);
+        $this->authorize('update', $post); // Check quyền
 
         return view('admin.posts.edit', compact('post'));
     }
 
-
-
-
+    /**
+     * Cập nhật bài viết.
+     */
     public function update(AdminUpdatePostRequest $request, Post $post)
     {
-        $this->authorize('updateStatus', $post);
-
-        DB::beginTransaction();
+        $this->authorize('updateStatus', $post); // Check quyền đổi trạng thái
 
         try {
-            $user = Auth::user();
+            $data = $request->validated();
 
-            $oldStatus = $post->status;
-
-            $data = [
-                'title' => $request->title,
-                'description' => $request->description,
-                'content' => $request->content,
-                'publish_date' => $request->publish_date,
-            ];
-
-            if ($user->isAdmin()) {
+            // Nếu là Admin thì được sửa status
+            if (Auth::user()->isAdmin()) {
                 $data['status'] = $request->validated('status');
             }
 
-            $post->update($data);
-
-            if (($data['status'] ?? $oldStatus) != $oldStatus) {
-                NotifyUserPostStatusJob::dispatch($post);
-            }
-
-            if ($request->hasFile('thumbnail')) {
-                $post->clearMediaCollection('thumbnails');
-                $post->addMediaFromRequest('thumbnail')->toMediaCollection('thumbnails');
-            }
-
-            DB::commit();
+            // Gọi service để update
+            $this->postService->updatePost(
+                $post,
+                $data,
+                $request->file('thumbnail')
+            );
 
             return to_route('admin.posts.index')->with('success', 'Cập nhật bài viết thành công!');
-        } catch (\Exception $e) {
-            DB::rollBack();
+        } catch (\Throwable $e) {
             Log::error('Cập nhật bài viết thất bại: ' . $e->getMessage());
 
-            return back()->withErrors([
-                'error' => 'Có lỗi xảy ra khi cập nhật bài viết: ' . $e->getMessage(),
-            ]);
+            return back()->withErrors(['error' => 'Cập nhật bài viết thất bại']);
         }
     }
 
-
-
-
+    /**
+     * Xoá 1 bài viết.
+     */
     public function destroy(Post $post)
     {
         $this->authorize('delete', $post);
 
-        DB::beginTransaction();
         try {
-            $post->delete();
-            DB::commit();
+            $this->postService->deletePost($post);
 
-            return back()->with('success', 'Admin đã xoá bài viết thành công.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Post deletion failed: ' . $e->getMessage());
+            return back()->with('success', 'Đã xoá bài viết thành công');
+        } catch (\Throwable $e) {
+            Log::error('Xoá bài viết thất bại: ' . $e->getMessage());
 
-            return back()->withErrors('Xoá bài viết thất bại. Vui lòng thử lại.');
+            return back()->withErrors(['error' => 'Xoá bài viết thất bại']);
         }
     }
 
-
-
-
+    /**
+     * Xoá tất cả bài viết.
+     */
     public function destroyAll()
     {
-
-        DB::beginTransaction();
         try {
-            Post::query()->delete();
-            DB::commit();
+            $this->postService->deleteAllPosts();
 
-            return back()->with('success', 'Admin đã xoá tất cả bài viết.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Bulk post deletion failed: ' . $e->getMessage());
+            return back()->with('success', 'Đã xoá tất cả bài viết');
+        } catch (\Throwable $e) {
+            Log::error('Xoá tất cả bài viết thất bại: ' . $e->getMessage());
 
-            return back()->withErrors('Xoá tất cả bài viết thất bại. Vui lòng thử lại.');
+            return back()->withErrors(['error' => 'Xoá tất cả bài viết thất bại']);
         }
     }
 }
