@@ -36,6 +36,9 @@ class AdminPostController extends Controller
 
     public function data(Request $request)
     {
+        if (! $request->ajax()) {
+            abort(403, 'Không hợp lệ.');
+        }
         $columns = [
             0 => 'posts.id',
             1 => 'posts.title',

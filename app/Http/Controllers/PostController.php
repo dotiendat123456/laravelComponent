@@ -30,6 +30,9 @@ class PostController extends Controller
 
     public function data(Request $request)
     {
+        if (! $request->ajax()) {
+            abort(403, 'Không hợp lệ.');
+        }
         $user = Auth::user();
 
         $query = $user->posts()->with('media');

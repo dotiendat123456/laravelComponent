@@ -25,6 +25,9 @@ class AdminUserController extends Controller
 
     public function data(Request $request)
     {
+        if (! $request->ajax()) {
+            abort(403, 'Không hợp lệ.');
+        }
         $query = User::query();
 
         if ($request->filled('name')) {
