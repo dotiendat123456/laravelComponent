@@ -22,7 +22,8 @@
 
     <!-- Datatables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/2.3.2/css/dataTables.dataTables.min.css" />
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="//cdn.datatables.net/2.3.2/js/dataTables.min.js"></script>
     @stack('styles')
 </head>
 

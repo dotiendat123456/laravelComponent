@@ -13,6 +13,49 @@ class PostService
     /**
      * Lấy danh sách bài viết của user hiện tại với tìm kiếm, sắp xếp, phân trang (dành cho DataTables).
      */
+    public function getUserPostsData(Request $request)
+    {
+        $user = Auth::user();
+
+        $query = $user->posts()->with('media');
+
+        if ($request->filled('search.value')) {
+            $search = $request->input('search.value');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        $columns = [
+            // 0 => 'id',
+            // 1 => 'thumbnail',
+            // 2 => 'title',
+            // 3 => 'description',
+            // 4 => 'publish_date',
+            // 5 => 'status',
+            0 => 'thumbnail',
+            1 => 'title',
+            2 => 'description',
+            3 => 'publish_date',
+            4 => 'status',
+        ];
+
+        $orderColIndex = $request->input('order.0.column');
+        $orderDir = $request->input('order.0.dir', 'desc');
+
+        if ($orderColIndex === null || !isset($columns[$orderColIndex]) || $columns[$orderColIndex] === 'thumbnail') {
+            $query->orderByDesc('id');
+        } else {
+            $query->orderBy($columns[$orderColIndex], $orderDir);
+        }
+
+        $length = intval($request->input('length', 10));
+        $start = intval($request->input('start', 0));
+        $page = ($start / $length) + 1;
+
+        return $query->paginate($length, ['*'], 'page', $page);
+    }
     // public function getUserPostsData(Request $request)
     // {
     //     $user = Auth::user();
@@ -34,6 +77,7 @@ class PostService
     //         3 => 'description',
     //         4 => 'publish_date',
     //         5 => 'status',
+
     //     ];
 
     //     $orderColIndex = $request->input('order.0.column');
@@ -46,48 +90,10 @@ class PostService
     //     }
 
     //     $length = intval($request->input('length', 10));
-    //     $start = intval($request->input('start', 0));
-    //     $page = ($start / $length) + 1;
 
-    //     return $query->paginate($length, ['*'], 'page', $page);
+    //     // Không cần tính $page, Laravel tự động nhận ?page=
+    //     return $query->paginate($length)->toResourceCollection();
     // }
-    public function getUserPostsData(Request $request)
-    {
-        $user = Auth::user();
-
-        $query = $user->posts()->with('media');
-
-        if ($request->filled('search.value')) {
-            $search = $request->input('search.value');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
-        }
-
-        $columns = [
-            0 => 'id',
-            1 => 'thumbnail',
-            2 => 'title',
-            3 => 'description',
-            4 => 'publish_date',
-            5 => 'status',
-        ];
-
-        $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir', 'asc');
-
-        if ($orderColIndex === null || !isset($columns[$orderColIndex]) || $columns[$orderColIndex] === 'thumbnail') {
-            $query->orderByDesc('id');
-        } else {
-            $query->orderBy($columns[$orderColIndex], $orderDir);
-        }
-
-        $length = intval($request->input('length', 10));
-
-        // Không cần tính $page, Laravel tự động nhận ?page=
-        return $query->paginate($length)->toResourceCollection();
-    }
 
 
     /**
