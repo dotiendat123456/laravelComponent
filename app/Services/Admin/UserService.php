@@ -65,7 +65,9 @@ class UserService
      */
     public function updateUser(User $user, array $data)
     {
-        return DB::transaction(function () use ($user, $data) {
+        DB::beginTransaction();
+
+        try {
             $result = $user->update([
                 'first_name' => $data['first_name'],
                 'last_name'  => $data['last_name'],
@@ -77,9 +79,14 @@ class UserService
                 throw new \Exception('Không thể cập nhật user.');
             }
 
+            DB::commit();
             return $user;
-        });
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
+
 
     /**
      * Khoá hoặc mở khoá user.

@@ -81,7 +81,9 @@ class PostService
      */
     public function createPost(array $data, $thumbnail = null)
     {
-        return DB::transaction(function () use ($data, $thumbnail) {
+        DB::beginTransaction();
+
+        try {
             $data['user_id'] = Auth::id(); // Gán user_id cho bài viết
             $data['status'] = PostStatus::APPROVED; // Admin tạo mặc định là APPROVED
 
@@ -91,8 +93,12 @@ class PostService
                 $post->addMedia($thumbnail)->toMediaCollection('thumbnails');
             }
 
+            DB::commit();
             return $post;
-        });
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -103,7 +109,9 @@ class PostService
      */
     public function updatePost(Post $post, array $data, $thumbnail = null)
     {
-        return DB::transaction(function () use ($post, $data, $thumbnail) {
+        DB::beginTransaction();
+
+        try {
             $oldStatus = $post->status;
 
             $post->update($data);
@@ -118,8 +126,12 @@ class PostService
                 $post->addMedia($thumbnail)->toMediaCollection('thumbnails');
             }
 
+            DB::commit();
             return $post;
-        });
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -127,9 +139,15 @@ class PostService
      */
     public function deletePost(Post $post)
     {
-        return DB::transaction(function () use ($post) {
+        DB::beginTransaction();
+
+        try {
             $post->delete();
-        });
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -137,8 +155,14 @@ class PostService
      */
     public function deleteAllPosts()
     {
-        return DB::transaction(function () {
+        DB::beginTransaction();
+
+        try {
             Post::query()->delete();
-        });
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 }

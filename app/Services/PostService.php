@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Services;
 
 use App\Models\Post;
@@ -16,13 +15,10 @@ class PostService
      */
     public function getUserPostsData(Request $request)
     {
-        // Lấy thông tin người dùng đang đăng nhập
         $user = Auth::user();
 
-        // Lấy danh sách bài viết của user, đồng thời load quan hệ media (ảnh thumbnail)
         $query = $user->posts()->with('media');
 
-        // Nếu có nhập từ khóa tìm kiếm thì lọc theo tiêu đề hoặc mô tả
         if ($request->filled('search.value')) {
             $search = $request->input('search.value');
             $query->where(function ($q) use ($search) {
@@ -31,33 +27,28 @@ class PostService
             });
         }
 
-        // Các cột được map với DataTables để xử lý sắp xếp
         $columns = [
             0 => 'id',
-            1 => 'thumbnail', // Không sắp xếp ảnh
+            1 => 'thumbnail',
             2 => 'title',
             3 => 'description',
             4 => 'publish_date',
             5 => 'status',
         ];
 
-        // Lấy cột sắp xếp từ DataTables
-        $orderColIndex = $request->input('order.0.column'); // Vị trí cột được sắp xếp
-        $orderDir = $request->input('order.0.dir', 'asc');  // Chiều sắp xếp (asc/desc), mặc định là asc
+        $orderColIndex = $request->input('order.0.column');
+        $orderDir = $request->input('order.0.dir', 'asc');
 
-        // Kiểm tra cột sắp xếp có hợp lệ không (nếu không hợp lệ hoặc là thumbnail thì sắp xếp mặc định theo ID giảm dần)
         if ($orderColIndex === null || !isset($columns[$orderColIndex]) || $columns[$orderColIndex] === 'thumbnail') {
             $query->orderByDesc('id');
         } else {
             $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        // Xử lý phân trang theo chuẩn DataTables
-        $length = intval($request->input('length', 10)); // Số lượng bản ghi mỗi trang
-        $start = intval($request->input('start', 0));    // Offset bắt đầu từ bản ghi nào
-        $page = ($start / $length) + 1;                  // Tính số trang hiện tại
+        $length = intval($request->input('length', 10));
+        $start = intval($request->input('start', 0));
+        $page = ($start / $length) + 1;
 
-        // Trả về danh sách bài viết đã phân trang
         return $query->paginate($length, ['*'], 'page', $page);
     }
 
@@ -66,7 +57,9 @@ class PostService
      */
     public function createPost(array $data, $thumbnail = null)
     {
-        return DB::transaction(function () use ($data, $thumbnail) {
+        DB::beginTransaction();
+
+        try {
             $data['user_id'] = Auth::id();
 
             $post = Post::create($data);
@@ -75,8 +68,12 @@ class PostService
                 $post->addMedia($thumbnail)->toMediaCollection('thumbnails');
             }
 
+            DB::commit();
             return $post;
-        });
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -84,7 +81,9 @@ class PostService
      */
     public function updatePost(Post $post, array $data, $thumbnail = null)
     {
-        return DB::transaction(function () use ($post, $data, $thumbnail) {
+        DB::beginTransaction();
+
+        try {
             $post->update($data);
 
             if ($thumbnail) {
@@ -92,8 +91,12 @@ class PostService
                 $post->addMedia($thumbnail)->toMediaCollection('thumbnails');
             }
 
+            DB::commit();
             return $post;
-        });
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -101,9 +104,15 @@ class PostService
      */
     public function deletePost(Post $post)
     {
-        return DB::transaction(function () use ($post) {
+        DB::beginTransaction();
+
+        try {
             $post->delete();
-        });
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
@@ -113,9 +122,15 @@ class PostService
     {
         $user = Auth::user();
 
-        return DB::transaction(function () use ($user) {
+        DB::beginTransaction();
+
+        try {
             $user->posts()->delete();
-        });
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**
