@@ -88,33 +88,40 @@
     @if (Auth::user()?->can('viewAny', App\Models\Post::class))
         <!-- ADMIN -->
         <div id="app" class="d-flex" style="padding-top: 56px;">
-            <!-- Sidebar Admin -->
-            <nav id="sidebar" class="bg-light border-end position-fixed"
-                style="width: 240px; top: 56px; bottom: 0; overflow-y: auto;">
-                <div class="p-3">
-                    <h4 class="text-center">Admin</h4>
-                    <ul class="nav flex-column">
-                        <li class="nav-item mb-2">
-                            <a href="{{ route('admin.posts.index') }}" class="nav-link">
-                                Quản lý Bài viết
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.users.index') }}" class="nav-link">
-                                Quản lý Tài khoản
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('news.index') }}" class="nav-link">
-                                Chi tiết bài viết
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+
+            @if (!request()->routeIs('news.index') && !request()->routeIs('news.show'))
+                <!-- Sidebar Admin -->
+                <nav id="sidebar" class="bg-light border-end position-fixed"
+                    style="width: 240px; top: 56px; bottom: 0; overflow-y: auto;">
+                    <div class="p-3">
+                        <h4 class="text-center">Admin</h4>
+                        <ul class="nav flex-column">
+                            <li class="nav-item mb-2">
+                                <a href="{{ route('admin.posts.index') }}"
+                                    class="nav-link {{ request()->routeIs('admin.posts.*') ? 'active fw-bold text-primary' : '' }}">
+                                    Quản lý Bài viết
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a href="{{ route('admin.users.index') }}"
+                                    class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-bold text-primary' : '' }}">
+                                    Quản lý Tài khoản
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a href="{{ route('news.index') }}"
+                                    class="nav-link {{ request()->routeIs('news.index') ? 'active fw-bold text-primary' : '' }}">
+                                    Chi tiết bài viết
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            @endif
 
             <!-- Content -->
-            <div class="flex-grow-1" style="margin-left: 240px;">
+            <div class="flex-grow-1"
+                style="margin-left: {{ (request()->routeIs('news.index') || request()->routeIs('news.show')) ? '0' : '240px' }};">
                 <main class="py-4 container">
                     @yield('content')
                 </main>
@@ -124,28 +131,34 @@
     @elseif (Auth::user()?->can('viewUser', App\Models\Post::class))
         <!-- USER -->
         <div id="app" class="d-flex" style="padding-top: 56px;">
-            <!-- Sidebar User -->
-            <nav id="sidebar" class="bg-light border-end position-fixed"
-                style="width: 200px; top: 56px; bottom: 0; overflow-y: auto;">
-                <div class="p-3">
-                    <h4 class="text-center">User</h4>
-                    <ul class="nav flex-column">
-                        <li class="nav-item mb-2">
-                            <a href="{{ route('posts.index') }}" class="nav-link">
-                                Danh sách bài viết
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="{{ route('news.index') }}" class="nav-link">
-                                Chi tiết bài viết
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
+
+            @if (!request()->routeIs('news.index') && !request()->routeIs('news.show'))
+                <!-- Sidebar User -->
+                <nav id="sidebar" class="bg-light border-end position-fixed"
+                    style="width: 200px; top: 56px; bottom: 0; overflow-y: auto;">
+                    <div class="p-3">
+                        <h4 class="text-center">User</h4>
+                        <ul class="nav flex-column">
+                            <li class="nav-item mb-2">
+                                <a href="{{ route('posts.index') }}"
+                                    class="nav-link {{ request()->routeIs('posts.index') ? 'active fw-bold text-primary' : '' }}">
+                                    Danh sách bài viết
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a href="{{ route('news.index') }}"
+                                    class="nav-link {{ request()->routeIs('news.index') ? 'active fw-bold text-primary' : '' }}">
+                                    Chi tiết bài viết
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </nav>
+            @endif
 
             <!-- Content -->
-            <div class="flex-grow-1" style="margin-left: 200px;">
+            <div class="flex-grow-1"
+                style="margin-left: {{ (request()->routeIs('news.index') || request()->routeIs('news.show')) ? '0' : '200px' }};">
                 <main class="py-4 container">
                     @yield('content')
                 </main>
@@ -160,6 +173,9 @@
             </main>
         </div>
     @endif
+
+
+
 
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

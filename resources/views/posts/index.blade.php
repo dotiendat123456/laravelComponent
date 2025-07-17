@@ -55,6 +55,25 @@
                 lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]], //  Các tuỳ chọn số dòng/trang
                 order: [[0, 'desc']],  //  Mặc định sắp xếp cột index 0 (ID) giảm dần → mới nhất lên đầu
                 ajax: '{{ route('posts.data') }}', //  URL route Laravel trả JSON cho DataTables
+                // ajax: function (data, callback) {
+                //     const page = (data.start / data.length) + 1;
+
+                //     $.get('{{ route('posts.data') }}', {
+                //         page: page, // Laravel nhận đúng param này!
+                //         length: data.length,
+                //         search: data.search.value,
+                //         order: data.order,
+                //         columns: data.columns,
+                //         draw: data.draw
+                //     }, function (response) {
+                //         callback({
+                //             draw: response.draw,
+                //             recordsTotal: response.recordsTotal,
+                //             recordsFiltered: response.recordsFiltered,
+                //             data: response.data
+                //         });
+                //     });
+                // },
 
 
                 columns: [
@@ -76,17 +95,17 @@
                             const editUrl = "{{ route('posts.edit', ':id') }}".replace(':id', row.id);
 
                             return `
-                                                <div class="d-inline-flex align-items-center gap-1">
-                                                    <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
-                                                        <i class="fa-solid fa-eye"></i>
-                                                    </a>
-                                                    <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
-                                                        <i class="fa-solid fa-edit"></i>
-                                                    </a>
-                                                    <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                                        <i class="fa-solid fa-trash"></i>
-                                                    </button>
-                                                </div>`;
+                                    <div class="d-inline-flex align-items-center gap-1">
+                                        <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                        </a>
+                                        <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                        </a>
+                                        <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                        </button>
+                                    </div>`;
                         }
 
 
@@ -94,7 +113,7 @@
                 ],
 
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.8/i18n/vi.json'
+                    url: '//cdn.datatables.net/plug-ins/2.3.2/i18n/vi.json'
                 }
             });
             table.on('xhr.dt', function (e, settings, json, xhr) {
