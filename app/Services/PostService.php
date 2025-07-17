@@ -19,12 +19,14 @@ class PostService
 
         $query = $user->posts()->with('media');
 
-        if ($request->filled('search.value')) {
-            $search = $request->input('search.value');
-            $query->where(function ($q) use ($search) {
-                $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%");
-            });
+        // Filter theo tiêu đề (filterTitle là input riêng)
+        if ($request->filled('title')) {
+            $query->where('title', 'like', '%' . $request->title . '%');
+        }
+
+        // Filter theo trạng thái (filterStatus là select enum)
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         $columns = [
