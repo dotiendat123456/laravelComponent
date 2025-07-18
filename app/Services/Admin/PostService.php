@@ -12,80 +12,76 @@ use Illuminate\Http\Request;
 
 class PostService
 {
-    /**
-     * Lấy danh sách bài viết cho Admin
-     * Có join user để lấy email nếu cần, có phân trang, lọc, sắp xếp.
-     */
-    public function getPostsData(Request $request)
+
+    public function getPostsData(array $data)
     {
-        // Khai báo các cột có thể sắp xếp, tương ứng với chỉ số cột DataTables
         $columns = [
-            0 => 'posts.id',         // Cột ID bài viết
-            1 => 'posts.title',      // Cột tiêu đề bài viết
-            2 => 'users.email',      // Cột email người dùng
-            3 => 'posts.status',     // Cột trạng thái bài viết
-            4 => 'posts.created_at', // Cột ngày tạo bài viết
+            0 => 'id',
+            1 => 'title',
+            2 => 'email',
+            3 => 'status',
+            4 => 'created_at',
         ];
 
-        // Lấy cột sắp xếp và chiều sắp xếp từ request
-        $orderColIndex = $request->input('order.0.column'); // Chỉ số cột cần sắp xếp
-        $orderDir = $request->input('order.0.dir', 'asc');  // Chiều sắp xếp (asc/desc)
-        $orderColumn = $columns[$orderColIndex] ?? 'posts.id'; // Nếu không có thì mặc định là sắp xếp theo ID
+        $orderColIndex = $data['order_column'] ?? 0;
+        $orderDir = $data['order_dir'] ?? 'asc';
+        $orderColumn = $columns[$orderColIndex] ?? 'id';
 
-        // Khởi tạo query cơ bản từ bảng posts
         $query = Post::query();
 
-        /**
-         * Khi nào cần JOIN bảng users?
-         * - Nếu sắp xếp theo email (users.email).
-         * - Hoặc đang tìm kiếm theo email người dùng.
-         */
-        $needJoin = $orderColumn === 'users.email' || $request->filled('email');
+        $needJoin = $orderColumn === 'users.email' || !empty($data['email']);
 
         if ($needJoin) {
-            // Join bảng users để truy vấn email và group by theo posts.id để tránh lỗi MySQL
             $query->join('users', 'posts.user_id', '=', 'users.id')
-                ->select('posts.*', 'users.email as user_email') // Lấy cả email để hiển thị
-                ->groupBy('posts.id');
+                ->select('posts.*', 'users.email as user_email')
+                ->distinct(); //Loại bỏ các bản ghi trùng lặp trong kết quả truy vấn
         } else {
-            // Nếu không cần join thì eager load user để tránh N+1 query khi hiển thị user
             $query->with('user');
         }
 
-        // Lọc theo tiêu đề bài viết
-        if ($request->filled('title')) {
-            $query->where('posts.title', 'like', "%{$request->title}%");
+        if (!empty($data['title'])) {
+            $query->where('posts.title', 'like', '%' . $data['title'] . '%');
         }
 
-        // Lọc theo email người dùng (chỉ khi có join)
-        if ($request->filled('email')) {
-            $query->where('users.email', 'like', "%{$request->email}%");
+        if (!empty($data['email'])) {
+            if ($needJoin) {
+                $query->where('users.email', 'like', '%' . $data['email'] . '%');
+            } else {
+                $query->whereHas('user', function ($q) use ($data) {
+                    $q->where('email', 'like', '%' . $data['email'] . '%');
+                });
+            }
         }
 
-        // Sắp xếp theo cột được yêu cầu
+        if (isset($data['status']) || $data['status'] === 0) {
+            $query->where('status', $data['status']);
+        }
+
         $query->orderBy($orderColumn, $orderDir);
 
-        // Phân trang theo chuẩn DataTables
-        $length = intval($request->input('length', 10)); // Số bản ghi mỗi trang
-        $start = intval($request->input('start', 0));    // Offset bắt đầu
-        $page = ($start / $length) + 1;                  // Tính số trang
+        $length = $data['length'];
 
-        // Trả về dữ liệu đã phân trang
-        return $query->paginate($length, ['*'], 'page', $page);
+        return $query->paginate($length);
     }
+
+
 
     /**
      * Tạo bài viết mới.
      * @param array $data : dữ liệu bài viết
      * @param $thumbnail : file ảnh thumbnail
      */
-    public function createPost(array $data, $thumbnail = null)
+    public function createPost(array $data)
     {
         DB::beginTransaction();
 
         try {
-            $data['user_id'] = Auth::id(); // Gán user_id cho bài viết
-            $data['status'] = PostStatus::APPROVED; // Admin tạo mặc định là APPROVED
+            $data['user_id'] = Auth::id();
+            $data['status'] = PostStatus::APPROVED;
+
+            // Lấy thumbnail ra khỏi mảng $data trước khi lưu DB
+            $thumbnail = $data['thumbnail'] ?? null;
+            unset($data['thumbnail']);
 
             $post = Post::create($data);
 
@@ -94,6 +90,7 @@ class PostService
             }
 
             DB::commit();
+
             return $post;
         } catch (\Exception $e) {
             DB::rollBack();
@@ -101,26 +98,35 @@ class PostService
         }
     }
 
+
     /**
      * Cập nhật bài viết.
      * @param Post $post : đối tượng bài viết cần cập nhật
      * @param array $data : dữ liệu cập nhật
      * @param $thumbnail : file thumbnail mới (nếu có)
      */
-    public function updatePost(Post $post, array $data, $thumbnail = null)
+    public function updatePost(array $data)
     {
         DB::beginTransaction();
 
         try {
+            // Lấy Post từ ID
+            $post = Post::findOrFail($data['id']);
+
             $oldStatus = $post->status;
+
+            // Tách thumbnail ra
+            $thumbnail = $data['thumbnail'] ?? null;
+            unset($data['thumbnail'], $data['id']);
 
             $post->update($data);
 
-            // Nếu status thay đổi thì dispatch Job gửi notify cho user
+            // Gửi notify nếu status thay đổi
             if (($data['status'] ?? $oldStatus) != $oldStatus) {
                 NotifyUserPostStatusJob::dispatch($post);
             }
 
+            // Xử lý thumbnail
             if ($thumbnail) {
                 $post->clearMediaCollection('thumbnails');
                 $post->addMedia($thumbnail)->toMediaCollection('thumbnails');
@@ -133,6 +139,7 @@ class PostService
             throw $e;
         }
     }
+
 
     /**
      * Xoá bài viết.

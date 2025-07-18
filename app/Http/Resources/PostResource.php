@@ -19,7 +19,7 @@ class PostResource extends JsonResource
             'id' => $this->id,
             'slug' => $this->slug,
             'thumbnail' => $this->thumbnail,
-            'title' => $this->title,
+            'title' => Str::limit($this->title, 50),
             'description' => Str::limit($this->description, 50),
             'publish_date' => optional($this->publish_date)->format('d/m/Y'),
             'status' => $this->status->label(),

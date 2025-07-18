@@ -36,32 +36,32 @@ class AdminPostController extends Controller
      * Hiển thị danh sách bài viết admin.
      * Data sẽ load qua Ajax (dataTable).
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.posts.index');
-    }
+        if ($request->ajax()) {
+            $data = [
+                'draw' => (int) $request->input('draw', 0),
+                'title' => $request->input('title'),
+                'email' => $request->input('email'),
+                'status' => $request->input('status'),
+                'order_column' => $request->input('order.0.column'),
+                'order_dir' => $request->input('order.0.dir', 'desc'),
+                'length' => (int) $request->input('length', 10),
+                'search' => $request->input('search.value'),
+                'columns' => $request->input('columns'),
+            ];
 
-    /**
-     * Trả về dữ liệu bài viết cho DataTables (Ajax).
-     * Có phân trang, lọc, sắp xếp.
-     */
-    public function data(Request $request)
-    {
-        // Check nếu không phải Ajax thì trả về lỗi 403
-        if (! $request->ajax()) {
-            abort(403, 'Không hợp lệ.');
+            $posts = $this->postService->getPostsData($data);
+
+            return response()->json([
+                'draw' => $data['draw'],
+                'recordsTotal' => $posts->total(),
+                'recordsFiltered' => $posts->total(),
+                'data' => PostResource::collection($posts)->resolve(),
+            ]);
         }
 
-        // Gọi Service để lấy data bài viết
-        $posts = $this->postService->getPostsData($request);
-
-        // Trả về JSON chuẩn cho DataTables
-        return response()->json([
-            'draw' => intval($request->input('draw')), // Biến giúp DataTables phân biệt request
-            'recordsTotal' => Post::count(),            // Tổng số bài viết
-            'recordsFiltered' => $posts->total(),       // Tổng số sau khi filter
-            'data' => PostResource::collection($posts)->resolve(), // Format data qua Resource
-        ]);
+        return view('admin.posts.index');
     }
 
     /**
@@ -82,11 +82,10 @@ class AdminPostController extends Controller
         $this->authorize('create', Post::class);
 
         try {
-            // Gọi Service để tạo bài viết
-            $this->postService->createPost(
-                $request->validated(),                 // Dữ liệu hợp lệ
-                $request->file('thumbnail')            // File ảnh
-            );
+            $data = $request->validated();
+            $data['thumbnail'] = $request->file('thumbnail'); // Đưa thumbnail vào mảng $data
+
+            $this->postService->createPost($data);
 
             return to_route('admin.posts.index')->with('success', 'Tạo bài viết thành công');
         } catch (\Throwable $e) {
@@ -95,6 +94,7 @@ class AdminPostController extends Controller
             return back()->withErrors(['error' => 'Đã xảy ra lỗi khi tạo bài viết']);
         }
     }
+
 
     /**
      * Hiển thị form chỉnh sửa bài viết.
@@ -111,22 +111,22 @@ class AdminPostController extends Controller
      */
     public function update(AdminUpdatePostRequest $request, Post $post)
     {
-        $this->authorize('updateStatus', $post); // Check quyền đổi trạng thái
+        $this->authorize('updateStatus', $post);
 
         try {
             $data = $request->validated();
 
-            // Nếu là Admin thì được sửa status
             if (Auth::user()->isAdmin()) {
                 $data['status'] = $request->validated('status');
             }
 
-            // Gọi service để update
-            $this->postService->updatePost(
-                $post,
-                $data,
-                $request->file('thumbnail')
-            );
+            // Truyền ID vào mảng data để Service biết post nào
+            $data['id'] = $post->id;
+
+            // Đưa thumbnail vào data
+            $data['thumbnail'] = $request->file('thumbnail');
+
+            $this->postService->updatePost($data);
 
             return to_route('admin.posts.index')->with('success', 'Cập nhật bài viết thành công!');
         } catch (\Throwable $e) {
@@ -135,6 +135,7 @@ class AdminPostController extends Controller
             return back()->withErrors(['error' => 'Cập nhật bài viết thất bại']);
         }
     }
+
 
     /**
      * Xoá 1 bài viết.

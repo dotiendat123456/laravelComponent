@@ -44,8 +44,10 @@ class Post extends Model implements HasMedia
     // Accessor thumbnail
     public function getThumbnailAttribute()
     {
-        return $this->getFirstMediaUrl('thumbnails') ?: null;
+        return $this->getFirstMediaUrl('thumbnails')
+            ?: asset('storage/default/default-thumbnail.png');
     }
+
     protected $casts = [
         'publish_date' => 'datetime',
         'status' => PostStatus::class,

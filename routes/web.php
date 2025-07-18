@@ -38,8 +38,8 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     // Route::delete('/posts-destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroyAll');
     // CRUD posts
     // Route phụ ngoài resource
-    Route::get('/posts/data', [PostController::class, 'data'])->name('posts.data');
-    Route::delete('/posts/destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroyAll');
+    // Route::get('/posts/data', [PostController::class, 'data'])->name('posts.data');
+    Route::delete('/posts/destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroy_all');
 
     Route::resource('posts', PostController::class)
         ->except(['show'])
@@ -78,7 +78,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'check.user.status'])->grou
 
     // Posts phụ
     Route::get('/posts/data', [AdminPostController::class, 'data'])->name('admin.posts.data');
-    Route::delete('/posts/destroy-all', [AdminPostController::class, 'destroyAll'])->name('admin.posts.destroyAll');
+    Route::delete('/posts/destroy-all', [AdminPostController::class, 'destroyAll'])->name('admin.posts.destroy_all');
 
     // Posts CRUD
     Route::resource('posts', AdminPostController::class)
@@ -94,7 +94,7 @@ Route::prefix('admin')->middleware(['auth', 'admin', 'check.user.status'])->grou
         ->parameters(['users' => 'user']);
 
     // Users phụ
-    Route::get('/users/data', [AdminUserController::class, 'data'])->name('admin.users.data');
+    // Route::get('/users/data', [AdminUserController::class, 'data'])->name('admin.users.data');
     Route::post('/users/{user}/toggle-status', [AdminUserController::class, 'toggleStatus'])->name('admin.users.toggleStatus');
 });
 

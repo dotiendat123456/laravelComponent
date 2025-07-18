@@ -21,10 +21,10 @@
         {{-- FORM TÌM KIẾM --}}
         <form id="searchForm" method="GET" class="row g-2 mb-3">
             <div class="col-auto">
-                <input type="text" name="name" class="form-control" placeholder="Tên">
+                <input type="text" id="filterName" name="name" class="form-control" placeholder="Tên">
             </div>
             <div class="col-auto">
-                <input type="text" name="email" class="form-control" placeholder="Email">
+                <input type="text" id="filterEmail" name="email" class="form-control" placeholder="Email">
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary">Lọc</button>
@@ -36,11 +36,12 @@
             <table id="usersTable" class="table table-striped table-hover align-middle table-fixed">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 20%;">Tên</th>
-                        <th style="width: 20%;">Email</th>
-                        <th style="width: 30%;">Địa chỉ</th>
-                        <th style="width: 15%;">Trạng thái</th>
-                        <th style="width: 15%;">Hành động</th>
+                        <th class="text-start">STT</th>
+                        <th>Tên</th>
+                        <th>Email</th>
+                        <th>Địa chỉ</th>
+                        <th>Trạng thái</th>
+                        <th>Hành động</th>
                     </tr>
                 </thead>
             </table>
@@ -65,20 +66,46 @@
             table = $('#usersTable').DataTable({
                 processing: true,
                 serverSide: true,
-                ordering: false,
+                ordering: true,
                 searching: false,
                 pageLength: 5,
                 lengthMenu: [[1, 3, 5, 10, 15], [1, 3, 5, 10, 15]],
+                order:[0,'desc'],
+                ajax: function (data, callback) {
+                    const page = (data.start / data.length) + 1; // Tính toán page từ start và length
 
-                ajax: {
-                    url: '{{ route('admin.users.data') }}',
-                    data: function (d) {
-                        d.name = $('input[name=name]').val();
-                        d.email = $('input[name=email]').val();
-                    }
+                    // Gửi request tới route posts.data
+                    $.get('{{ route('admin.users.index') }}', {
+                        page: page, // Laravel cần param này để phân trang
+                        length: data.length, // Số lượng mỗi trang
+                        draw: data.draw,     // Dùng để đồng bộ với client
+                        search: data.search.value, // Tìm kiếm từ DataTables (nếu có)
+                        order: data.order,   // Sắp xếp cột
+                        columns: data.columns, // Cột được gửi lên
+                        name: $('#filterName').val(), // Lọc tiêu đề
+                        email: $('#filterEmail').val() // Lọc trạng thái
+                    }, function (response) {
+                        // Callback để DataTable hiển thị dữ liệu
+                        callback({
+                            draw: response.draw,
+                            recordsTotal: response.recordsTotal, // Tổng số bản ghi
+                            recordsFiltered: response.recordsFiltered, // Số bản ghi sau khi lọc
+                            data: response.data // Dữ liệu trả về
+                        });
+                    });
                 },
 
                 columns: [
+                    { // STT
+                        data: null,
+                        orderable: false,
+                        searchable: false,
+                        render: function (data, type, row, meta) {
+                            return meta.row + 1; // Số thứ tự trong trang hiện tại
+                        },
+                        className: 'text-start',
+                        width: '50px'
+                    },
                     { data: 'name' },
                     { data: 'email' },
                     { data: 'address' },
@@ -109,20 +136,20 @@
                             // Không cho phép chỉnh sửa chính mình
                             if (row.id !== @json(Auth::id())) {
                                 buttons += `<a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                            Sửa
-                                        </a>`;
+                                                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                                                Sửa
+                                                                                            </a>`;
 
                                 if (row.status_value === 3) {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
-                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
-                                                Mở khóa
-                                            </button>`;
+                                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
+                                                                                                    Mở khóa
+                                                                                                </button>`;
                                 } else {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
-                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
-                                                Khóa
-                                            </button>`;
+                                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
+                                                                                                    Khóa
+                                                                                                </button>`;
                                 }
                             } else {
                                 // Nếu là chính mình chỉ hiển thị dấu gạch ngang hoặc không hiển thị gì
@@ -136,7 +163,19 @@
                 ],
 
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/2.3.2/i18n/vi.json'
+                    "emptyTable": "Không có bài viết nào",
+                    "search": "Tìm kiếm:",
+                    "zeroRecords": "Không tìm thấy kết quả phù hợp",
+                    "lengthMenu": "Hiển thị _MENU_ mục mỗi trang",
+                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
+                    "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
+                    "infoFiltered": "(được lọc từ tổng số _MAX_ mục)",
+                    "paginate": {
+                        "first": "Đầu tiên",
+                        "previous": "Trước",
+                        "next": "Sau",
+                        "last": "Cuối cùng"
+                    }
                 }
             });
 

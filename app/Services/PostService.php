@@ -13,38 +13,37 @@ class PostService
     /**
      * Lấy danh sách bài viết của user hiện tại với tìm kiếm, sắp xếp, phân trang (dành cho DataTables).
      */
-    public function getUserPostsData(Request $request)
+    public function getPostsData(array $data)
     {
         $user = Auth::user();
 
         $query = $user->posts()->with('media');
 
-        // Filter theo tiêu đề (filterTitle là input riêng)
-        if ($request->filled('title')) {
-            $query->where('title', 'like', '%' . $request->title . '%');
+        // Filter theo tiêu đề và mô tả
+        if (!empty($data['title'])) {
+            $query->whereAny(['title', 'description'], 'like', '%' . $data['title'] . '%');
         }
 
-        // Filter theo trạng thái (filterStatus là select enum)
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        // Filter theo trạng thái
+        // if (!empty($data['status'])) {
+        //     $query->where('status', $data['status']);
+        // }
+        if (isset($data['status']) || $data['status'] === 0) {
+            $query->where('status', $data['status']);
         }
+
 
         $columns = [
-            // 0 => 'id',
-            // 1 => 'thumbnail',
-            // 2 => 'title',
-            // 3 => 'description',
-            // 4 => 'publish_date',
-            // 5 => 'status',
             0 => 'thumbnail',
             1 => 'title',
             2 => 'description',
             3 => 'publish_date',
             4 => 'status',
+
         ];
 
-        $orderColIndex = $request->input('order.0.column');
-        $orderDir = $request->input('order.0.dir', 'desc');
+        $orderColIndex = $data['order_column'];
+        $orderDir = $data['order_dir'];
 
         if ($orderColIndex === null || !isset($columns[$orderColIndex]) || $columns[$orderColIndex] === 'thumbnail') {
             $query->orderByDesc('id');
@@ -52,61 +51,27 @@ class PostService
             $query->orderBy($columns[$orderColIndex], $orderDir);
         }
 
-        $length = intval($request->input('length', 10));
-        $start = intval($request->input('start', 0));
-        $page = ($start / $length) + 1;
+        $length = $data['length'];
 
-        return $query->paginate($length, ['*'], 'page', $page);
+        return $query->paginate($length);
     }
-    // public function getUserPostsData(Request $request)
-    // {
-    //     $user = Auth::user();
 
-    //     $query = $user->posts()->with('media');
 
-    //     if ($request->filled('search.value')) {
-    //         $search = $request->input('search.value');
-    //         $query->where(function ($q) use ($search) {
-    //             $q->where('title', 'like', "%{$search}%")
-    //                 ->orWhere('description', 'like', "%{$search}%");
-    //         });
-    //     }
-
-    //     $columns = [
-    //         0 => 'id',
-    //         1 => 'thumbnail',
-    //         2 => 'title',
-    //         3 => 'description',
-    //         4 => 'publish_date',
-    //         5 => 'status',
-
-    //     ];
-
-    //     $orderColIndex = $request->input('order.0.column');
-    //     $orderDir = $request->input('order.0.dir', 'asc');
-
-    //     if ($orderColIndex === null || !isset($columns[$orderColIndex]) || $columns[$orderColIndex] === 'thumbnail') {
-    //         $query->orderByDesc('id');
-    //     } else {
-    //         $query->orderBy($columns[$orderColIndex], $orderDir);
-    //     }
-
-    //     $length = intval($request->input('length', 10));
-
-    //     // Không cần tính $page, Laravel tự động nhận ?page=
-    //     return $query->paginate($length)->toResourceCollection();
-    // }
 
 
     /**
      * Tạo mới bài viết.
      */
-    public function createPost(array $data, $thumbnail = null)
+    public function createPost(array $data)
     {
         DB::beginTransaction();
 
         try {
             $data['user_id'] = Auth::id();
+
+            //Lấy thumbnail ra khỏi data trước khi lưu            
+            $thumbnail = $data['thumbnail'] ?? null;
+            unset($data['thumbnail']);
 
             $post = Post::create($data);
 
@@ -116,34 +81,39 @@ class PostService
 
             DB::commit();
             return $post;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
         }
     }
+
 
     /**
      * Cập nhật bài viết.
      */
-    public function updatePost(Post $post, array $data, $thumbnail = null)
+    public function updatePost(array $data)
     {
         DB::beginTransaction();
 
         try {
+            $post = Post::findOrFail($data['id']); //Trả về 1 bản ghi duy nhất(Kết quả là 1 đối tượng Post)
+
             $post->update($data);
 
-            if ($thumbnail) {
+            if (!empty($data['thumbnail'])) {
                 $post->clearMediaCollection('thumbnails');
-                $post->addMedia($thumbnail)->toMediaCollection('thumbnails');
+                $post->addMedia($data['thumbnail'])->toMediaCollection('thumbnails');
             }
 
             DB::commit();
             return $post;
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;
         }
     }
+
+
 
     /**
      * Xoá 1 bài viết.

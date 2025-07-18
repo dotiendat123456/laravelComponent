@@ -34,13 +34,13 @@ class PostFactory extends Factory
         ];
     }
 
-    public function configure()
-    {
-        return $this->afterCreating(function (Post $post) {
-            // Gán ảnh mặc định khi seed
-            $post->addMedia(storage_path('app/public/default/default-thumbnail.png'))
-                ->preservingOriginal()
-                ->toMediaCollection('thumbnails');
-        });
-    }
+    // public function configure()
+    // {
+    //     return $this->afterCreating(function (Post $post) {
+    //         // Gán ảnh mặc định khi seed
+    //         $post->addMedia(storage_path('app/public/default/default-thumbnail.png'))
+    //             ->preservingOriginal()
+    //             ->toMediaCollection('thumbnails');
+    //     });
+    // }
 }

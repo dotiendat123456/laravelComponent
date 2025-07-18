@@ -25,32 +25,33 @@ class AdminUserController extends Controller
     /**
      * Hiển thị giao diện danh sách user admin.
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->ajax()) {
+            // Chuẩn bị mảng $data truyền vào service
+            $data = [
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'order_column' => $request->input('order.0.column'),
+                'order_dir' => $request->input('order.0.dir', 'asc'),
+                'length' => intval($request->input('length', 10)),
+            ];
+
+            // Gọi service với mảng $data
+            $users = $this->userService->getUsersData($data);
+
+            return response()->json([
+                'draw' => intval($request->input('draw')),
+                'recordsTotal' => $users->total(),
+                'recordsFiltered' => $users->total(),
+                'data' => UserResource::collection($users)->resolve(),
+            ]);
+        }
+
         return view('admin.users.index');
     }
 
-    /**
-     * Lấy dữ liệu user trả về cho DataTables (Ajax).
-     */
-    public function data(Request $request)
-    {
-        // Kiểm tra xem có phải request AJAX không, nếu không thì trả về lỗi 403.
-        if (! $request->ajax()) {
-            abort(403, 'Không hợp lệ.');
-        }
 
-        // Gọi UserService để lấy danh sách user (đã áp dụng tìm kiếm, phân trang, sắp xếp nếu có)
-        $users = $this->userService->getUsersData($request);
-
-        // Trả về JSON response cho DataTables với cấu trúc chuẩn
-        return response()->json([
-            'draw' => intval($request->input('draw')), // Đảm bảo đúng số lần request, phục vụ DataTables đồng bộ hóa
-            'recordsTotal' => $users->total(), // Tổng số user trước khi filter
-            'recordsFiltered' => $users->total(), // Tổng số user sau khi filter (trong ví dụ này là như nhau, nhưng có thể khác nếu thực sự filter)
-            'data' => UserResource::collection($users)->resolve(), // Chuyển đổi dữ liệu user sang Resource để trả về frontend
-        ]);
-    }
 
     /**
      * Hiển thị form chỉnh sửa user.
@@ -70,7 +71,10 @@ class AdminUserController extends Controller
         $this->authorize('updateStatus', $user);
 
         try {
-            $this->userService->updateUser($user, $request->validated());
+            $data = $request->validated();
+            $data['id'] = $user->id; // Thêm id vào mảng data
+
+            $this->userService->updateUser($data);
 
             return to_route('admin.users.index')->with('success', 'Cập nhật user thành công.');
         } catch (\Throwable $e) {
@@ -80,13 +84,19 @@ class AdminUserController extends Controller
         }
     }
 
+
     /**
      * Khoá / Mở khoá user.
      */
     public function toggleStatus(User $user, Request $request)
     {
         try {
-            $newStatus = $this->userService->toggleUserStatus($user, $request->action);
+            $data = [
+                'id' => $user->id,
+                'action' => $request->input('action'),
+            ];
+
+            $newStatus = $this->userService->toggleUserStatus($data);
 
             return response()->json(['success' => true, 'status' => $newStatus]);
         } catch (\Throwable $e) {

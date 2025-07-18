@@ -16,7 +16,7 @@
             @method('PUT')
 
             <div class="mb-3">
-                <label>First Name</label>
+                <label>Họ<span class="text-danger">*</span></label>
                 <input name="first_name" value="{{ old('first_name', $user->first_name) }}"
                     class="form-control @error('first_name') is-invalid @enderror">
                 @error('first_name')
@@ -25,7 +25,7 @@
             </div>
 
             <div class="mb-3">
-                <label>Last Name</label>
+                <label>Tên<span class="text-danger">*</span></label>
                 <input name="last_name" value="{{ old('last_name', $user->last_name) }}"
                     class="form-control @error('last_name') is-invalid @enderror">
                 @error('last_name')

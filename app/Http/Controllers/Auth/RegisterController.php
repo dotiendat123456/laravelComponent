@@ -12,9 +12,16 @@ use Illuminate\Support\Facades\Mail;
 use App\Jobs\SendWelcomeEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Services\Auth\AuthService;
+
 
 class RegisterController extends Controller
 {
+    protected $authService;
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
 
     public function getRegister()
     {
@@ -25,27 +32,11 @@ class RegisterController extends Controller
 
     public function postRegister(RegisterUserRequest $request)
     {
-        DB::beginTransaction();
-
         try {
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name'  => $request->last_name,
-                'email'      => $request->email,
-                'password'   => $request->password, // đã hash tự động nếu dùng casts
-                'status'     => UserStatus::PENDING, // hoặc bỏ nếu đã default
-                'role'       => UserRole::USER, // hoặc bỏ nếu đã default
-            ]);
-
-            // Gửi mail nếu cần
-            SendWelcomeEmail::dispatch($user);
-
-            DB::commit();
+            $this->authService->register($request->validated());
 
             return to_route('login')->with('success', 'Đăng ký tài khoản thành công');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Register failed: ' . $e->getMessage());
+        } catch (\Throwable $e) {
             return back()->withErrors(['register_error' => 'Đăng ký thất bại: ' . $e->getMessage()]);
         }
     }

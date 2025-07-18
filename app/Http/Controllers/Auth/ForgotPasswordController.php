@@ -10,10 +10,17 @@ use Illuminate\Support\Facades\Hash;
 use App\Jobs\SendResetPasswordLink;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use App\Services\Auth\AuthService;
+
 
 
 class ForgotPasswordController extends Controller
 {
+    protected $authService;
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
     /**
      * Hiển thị form nhập email để gửi link reset mật khẩu
      */
@@ -27,38 +34,11 @@ class ForgotPasswordController extends Controller
      */
     public function sendResetLinkEmail(ForgotPasswordRequest $request)
     {
-        DB::beginTransaction();
-
         try {
-            // Tìm user
-            $user = User::where('email', $request->email)->first();
-
-            if (!$user) {
-                throw new \Exception('Email không tồn tại trong hệ thống.');
-            }
-
-            // Tạo token
-            $token = Str::random(60);
-
-            // Cập nhật hoặc thêm token mới
-            DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $user->email],
-                [
-                    'token' => Hash::make($token),
-                    'created_at' => now(),
-                ]
-            );
-
-            // Gửi email bằng Job
-            SendResetPasswordLink::dispatch($user, $token);
-
-            DB::commit();
+            $this->authService->sendResetLink($request->validated());
 
             return back()->with('status', 'Đã gửi liên kết đặt lại mật khẩu vào email của bạn.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Reset password failed: ' . $e->getMessage());
-
+        } catch (\Throwable $e) {
             return back()->withErrors([
                 'email' => 'Không thể gửi email đặt lại mật khẩu: ' . $e->getMessage(),
             ]);

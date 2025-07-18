@@ -26,31 +26,31 @@ class PostController extends Controller
     /**
      * Hiển thị danh sách bài viết (user).
      */
-    public function index()
+    public function index(Request $request)
     {
-        return view('posts.index');
-    }
+        if ($request->ajax()) {
+            $data = [
+                'draw' => (int) $request->input('draw', 0),
+                'title' => $request->input('title'),
+                'status' => $request->input('status'),
+                'order_column' => $request->input('order.0.column'),
+                'order_dir' => $request->input('order.0.dir', 'desc'),
+                'length' => (int) $request->input('length', 10),
+                'search' => $request->input('search.value'),
+                'columns' => $request->input('columns'),
+            ];
 
-    /**
-     * Lấy dữ liệu bài viết của user (dạng JSON cho DataTables).
-     */
-    public function data(Request $request)
-    {
-        // Kiểm tra xem request có phải là AJAX không
-        if (! $request->ajax()) {
-            abort(403, 'Không hợp lệ.'); // Trả về lỗi 403 nếu request không hợp lệ
+            $posts = $this->postService->getPostsData($data);
+
+            return response()->json([
+                'draw' => $data['draw'],
+                'recordsTotal' => $posts->total(),
+                'recordsFiltered' => $posts->total(),
+                'data' => PostResource::collection($posts)->resolve(),
+            ]);
         }
 
-        // Gọi service để lấy danh sách bài viết của user hiện tại (đã phân trang, tìm kiếm, sắp xếp)
-        $posts = $this->postService->getUserPostsData($request);
-
-        // Trả về dữ liệu theo format chuẩn của DataTables
-        return response()->json([
-            'draw' => intval($request->input('draw')), // Số lần gọi AJAX, dùng để phân biệt các lần request
-            'recordsTotal' => $posts->total(), // Tổng số bài viết (trước khi filter)
-            'recordsFiltered' => $posts->total(), // Số bản ghi sau khi filter (ở đây bằng luôn total do đã filter trong Service)
-            'data' => PostResource::collection($posts)->resolve(), // Chuyển dữ liệu bài viết thành resource JSON
-        ]);
+        return view('posts.index');
     }
 
     /**
@@ -71,10 +71,10 @@ class PostController extends Controller
         $this->authorize('create', Post::class);
 
         try {
-            $this->postService->createPost(
-                $request->validated(),
-                $request->file('thumbnail')
-            );
+            $data = $request->validated();
+            $data['thumbnail'] = $request->file('thumbnail'); // Gộp file vào mảng data
+
+            $this->postService->createPost($data);
 
             return to_route('posts.index')->with('success', 'Tạo bài viết thành công');
         } catch (\Throwable $e) {
@@ -82,6 +82,7 @@ class PostController extends Controller
             return back()->withErrors(['error' => 'Không thể tạo bài viết, vui lòng thử lại.']);
         }
     }
+
 
     /**
      * Hiển thị form chỉnh sửa bài viết.
@@ -107,7 +108,10 @@ class PostController extends Controller
                 $data['status'] = $request->validated('status');
             }
 
-            $this->postService->updatePost($post, $data, $request->file('thumbnail'));
+            $data['thumbnail'] = $request->file('thumbnail');
+            $data['id'] = $post->id; // Truyền id vào mảng
+
+            $this->postService->updatePost($data);
 
             return to_route('posts.index')->with('success', 'Cập nhật bài viết thành công!');
         } catch (\Throwable $e) {
@@ -115,6 +119,8 @@ class PostController extends Controller
             return back()->withErrors(['error' => 'Đã xảy ra lỗi, vui lòng thử lại!']);
         }
     }
+
+
 
     /**
      * Xoá 1 bài viết.

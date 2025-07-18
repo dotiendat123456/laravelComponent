@@ -17,7 +17,7 @@ class AdminStorePostRequest extends FormRequest
             'title' => 'required|string|max:100',
             'description' => 'required|string|max:200',
             'content' => 'required|string',
-            'publish_date' => 'required|date',
+            'publish_date' => 'required|date|after:today',
             'thumbnail' => 'required|image|max:2048',
         ];
     }
@@ -38,6 +38,7 @@ class AdminStorePostRequest extends FormRequest
 
             'publish_date.required' => 'Ngày đăng không được để trống.',
             'publish_date.date' => 'Ngày đăng phải đúng định dạng ngày.',
+            'publish_date.after' => 'Ngày đăng phải lớn hơn ngày hiện tại.',
 
             'thumbnail.required' => 'Vui lòng tải lên thumbnail.',
             'thumbnail.image' => 'Tệp tải lên phải là hình ảnh.',
