@@ -39,12 +39,13 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     // CRUD posts
     // Route phụ ngoài resource
     // Route::get('/posts/data', [PostController::class, 'data'])->name('posts.data');
-    Route::delete('/posts/destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroy_all');
+    Route::delete('/posts/destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroy_all')->middleware('user');
 
     Route::resource('posts', PostController::class)
         ->except(['show'])
         ->names('posts')
-        ->parameters(['posts' => 'post']);
+        ->parameters(['posts' => 'post'])
+        ->middleware('user');
 });
 
 
