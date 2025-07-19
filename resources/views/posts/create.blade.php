@@ -40,10 +40,20 @@
             </div>
 
             {{-- Nội dung (Quill Editor) --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label class="form-label">Nội dung<span class="text-danger">*</span></label>
                 <div id="editor" style="height: 300px;">{!! old('content') !!}</div>
                 <input type="hidden" name="content" id="content">
+                @error('content')
+                <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div> --}}
+            {{-- Nội dung --}}
+            <div class="mb-3">
+                <label class="form-label">Nội dung<span class="text-danger">*</span></label>
+
+                <x-quill-editor name="content" :value="old('content')" height="300" />
+
                 @error('content')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
@@ -74,36 +84,36 @@
         </form>
     </div>
 @endsection
-
+{{--
 @push('styles')
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 @endpush
 
 
 @push('scripts')
-    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
-    <script>
-        const quill = new Quill('#editor', {
-            theme: 'snow'
-        });
+<script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+<script>
+    const quill = new Quill('#editor', {
+        theme: 'snow'
+    });
 
-        // Lấy old content từ Blade (escape quote cẩn thận)
-        const oldContent = `{!! old('content') !!}`;
-        if (oldContent) {
-            quill.root.innerHTML = oldContent;
+    // Lấy old content từ Blade (escape quote cẩn thận)
+    const oldContent = `{!! old('content') !!}`;
+    if (oldContent) {
+        quill.root.innerHTML = oldContent;
+    }
+
+    document.getElementById('postForm').addEventListener('submit', function (e) {
+        // console.log('Quill HTML khi submit:', quill.root.innerHTML);
+        // console.log('Quill Delta khi submit:', quill.getContents());
+        // console.log('Quill Text khi submit:', quill.getText());
+        const plainText = quill.getText().trim();
+        if (plainText === '') {
+            document.getElementById('content').value = '';
+        } else {
+            document.getElementById('content').value = quill.root.innerHTML;
         }
+    });
+</script>
 
-        document.getElementById('postForm').addEventListener('submit', function (e) {
-            // console.log('Quill HTML khi submit:', quill.root.innerHTML);
-            // console.log('Quill Delta khi submit:', quill.getContents());
-            // console.log('Quill Text khi submit:', quill.getText());
-            const plainText = quill.getText().trim();
-            if (plainText === '') {
-                document.getElementById('content').value = '';
-            } else {
-                document.getElementById('content').value = quill.root.innerHTML;
-            }
-        });
-    </script>
-
-@endpush
+@endpush --}}

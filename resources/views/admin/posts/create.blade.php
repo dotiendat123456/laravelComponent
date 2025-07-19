@@ -42,10 +42,23 @@
             </div>
 
             {{-- Nội dung --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label class="form-label">Nội dung <span class="text-danger">*</span></label>
                 <div id="editor" style="height: 300px;"></div>
                 <input type="hidden" name="content" id="content">
+                @error('content')
+                    <div class="text-danger">{{ $message }}</div>
+                @enderror
+            </div> --}}
+            <div class="mb-3">
+                <label class="form-label">Nội dung<span class="text-danger">*</span></label>
+                
+                <x-quill-editor 
+                    name="content" 
+                    :value="old('content')" 
+                    height="300" 
+                />
+
                 @error('content')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
@@ -78,7 +91,7 @@
     </div>
 @endsection
 
-@push('styles')
+{{-- @push('styles')
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 @endpush
 
@@ -108,4 +121,4 @@
         });
     </script>
 
-@endpush
+@endpush --}}
