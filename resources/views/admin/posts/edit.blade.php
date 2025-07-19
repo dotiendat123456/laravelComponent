@@ -21,24 +21,36 @@
             @method('PUT')
 
             {{-- Tiêu đề --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="title" class="form-label">Tiêu đề<span class="text-danger">*</span> </label>
                 <input type="text" name="title" id="title" value="{{ old('title', $post->title) }}"
                     class="form-control @error('title') is-invalid @enderror">
                 @error('title')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
+            <x-form.input 
+                name="title" 
+                label="Tiêu đề" 
+                :value="$post->title" 
+                required 
+            />
 
             {{-- Mô tả --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="description" class="form-label">Mô tả<span class="text-danger">*</span></label>
                 <input type="text" name="description" id="description" value="{{ old('description', $post->description) }}"
                     class="form-control @error('description') is-invalid @enderror">
                 @error('description')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
+            <x-form.input 
+                name="description" 
+                label="Mô tả" 
+                :value="$post->description" 
+                required 
+            />
 
             {{-- Nội dung --}}
             {{-- <div class="mb-3">
@@ -62,7 +74,7 @@
             </div>
 
             {{-- Ngày đăng --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="publish_date" class="form-label">Ngày đăng<span class="text-danger">*</span></label>
                 <input type="datetime-local" name="publish_date" id="publish_date"
                     value="{{ old('publish_date', $post->publish_date ? $post->publish_date->format('Y-m-d\TH:i') : '') }}"
@@ -70,10 +82,17 @@
                 @error('publish_date')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
+             <x-form.input 
+                name="publish_date" 
+                label="Ngày đăng" 
+                type="datetime-local" 
+                :value="$post->publish_date ? $post->publish_date->format('Y-m-d\TH:i') : ''" 
+                required 
+            />
 
             {{-- Thumbnail --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="thumbnail" class="form-label">Thumbnail<span class="text-danger">*</span></label>
                 <input type="file" name="thumbnail" id="thumbnail"
                     class="form-control @error('thumbnail') is-invalid @enderror">
@@ -87,10 +106,16 @@
                     </div>
                 @endif
 
-            </div>
+            </div> --}}
+            <x-form.file-input 
+                name="thumbnail" 
+                label="Thumbnail" 
+                :required="true" 
+                :current-file="$post->thumbnail"
+            />
 
             @can('updateStatus', $post)
-                <div class="mb-3">
+                {{-- <div class="mb-3">
                     <label for="status" class="form-label">Trạng thái</label>
                     <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
                         @foreach (\App\Enums\PostStatus::cases() as $status)
@@ -100,7 +125,15 @@
                         @endforeach
                     </select>
 
-                </div>
+                </div> --}}
+                <x-form.select-enum 
+                    name="status" 
+                    label="Trạng thái" 
+                    enum="\App\Enums\PostStatus" 
+                    :selected="$post->status->value"
+                    required
+                />
+
             @endcan
 
             {{-- Submit --}}

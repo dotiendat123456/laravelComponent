@@ -20,7 +20,7 @@
             @csrf
 
             {{-- Tiêu đề --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="title" class="form-label">
                     Tiêu đề <span class="text-danger">*</span>
                 </label>
@@ -29,17 +29,27 @@
                 @error('title')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
+            <x-form.input 
+                name="title" 
+                label="Tiêu đề" 
+                required 
+            />
 
             {{-- Mô tả --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="description" class="form-label">Mô tả<span class="text-danger">*</span></label>
                 <input type="text" name="description" id="description" value="{{ old('description') }}"
                     class="form-control @error('description') is-invalid @enderror">
                 @error('description')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
+            <x-form.input 
+                name="description" 
+                label="Mô tả" 
+                required 
+            />
 
             {{-- Nội dung --}}
             {{-- <div class="mb-3">
@@ -66,24 +76,35 @@
 
 
             {{-- Ngày đăng --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="publish_date" class="form-label">Ngày đăng<span class="text-danger">*</span></label>
                 <input type="datetime-local" name="publish_date" id="publish_date" value="{{ old('publish_date') }}"
                     class="form-control @error('publish_date') is-invalid @enderror">
                 @error('publish_date')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
+            <x-form.input 
+                name="publish_date" 
+                label="Ngày đăng" 
+                type="datetime-local" 
+                required
+            />
 
             {{-- Ảnh thumbnail --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label for="thumbnail" class="form-label">Thumbnail<span class="text-danger">*</span></label>
                 <input type="file" name="thumbnail" id="thumbnail"
                     class="form-control @error('thumbnail') is-invalid @enderror">
                 @error('thumbnail')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
+            <x-form.file-input 
+                name="thumbnail" 
+                label="Thumbnail" 
+                :required="true" 
+            />
 
             {{-- Nút submit --}}
             <button type="submit" class="btn btn-primary">Tạo bài viết</button>
