@@ -10,9 +10,8 @@
             @forelse ($posts as $post)
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        @if ($post->getFirstMediaUrl('thumbnails'))
-                            <img src="{{ $post->getFirstMediaUrl('thumbnails') }}" alt="{{ $post->title }}"
-                                class="img-fluid rounded news-thumbnail">
+                        @if ($post->thumbnail)
+                            <img src="{{ $post->thumbnail }}" alt="{{ $post->title }}" class="img-fluid rounded news-thumbnail">
                         @else
                             <img src="https://via.placeholder.com/400x250?text=No+Image" alt="No Image"
                                 class="img-fluid rounded news-thumbnail">

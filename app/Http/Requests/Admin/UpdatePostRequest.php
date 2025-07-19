@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use App\Enums\PostStatus;
 
-class AdminUpdatePostRequest extends FormRequest
+class UpdatePostRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -19,7 +19,7 @@ class AdminUpdatePostRequest extends FormRequest
             'title' => ['required', 'string', 'max:100'],
             'description' => ['required', 'string', 'max:200'],
             'content' => ['required', 'string'],
-            'publish_date' => ['required', 'date', 'after:today'],
+            'publish_date' => ['required', 'date'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
         ];
 
@@ -53,7 +53,6 @@ class AdminUpdatePostRequest extends FormRequest
 
             'publish_date.required' => 'Vui lòng nhập ngày đăng.',
             'publish_date.date' => 'Ngày đăng không hợp lệ.',
-            'publish_date.after' => 'Ngày đăng phải lớn hơn ngày hiện tại.',
 
 
             'thumbnail.image' => 'Thumbnail phải là định dạng ảnh.',

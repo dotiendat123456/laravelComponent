@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Password;
 class SendResetPasswordLink implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-
+    // public $queue = 'reset_password';
     protected $user;
     protected $token;
 
@@ -24,6 +24,7 @@ class SendResetPasswordLink implements ShouldQueue
     {
         $this->user = $user;
         $this->token = $token;
+        $this->onQueue('reset_password');
     }
 
     public function handle()

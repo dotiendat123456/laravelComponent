@@ -98,20 +98,26 @@
                         <h4 class="text-center">Admin</h4>
                         <ul class="nav flex-column">
                             <li class="nav-item mb-2">
-                                <a href="{{ route('admin.posts.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.posts.*') ? 'active fw-bold text-primary' : '' }}">
+                                <a href="{{ route('admin.posts.index') }}" @class([
+                                    'nav-link',
+                                    'active fw-bold text-primary' => request()->routeIs('admin.posts.*')
+                                ])>
                                     Quản lý Bài viết
                                 </a>
                             </li>
                             <li class="nav-item mb-2">
-                                <a href="{{ route('admin.users.index') }}"
-                                    class="nav-link {{ request()->routeIs('admin.users.*') ? 'active fw-bold text-primary' : '' }}">
+                                <a href="{{ route('admin.users.index') }}" @class([
+                                    'nav-link',
+                                    'active fw-bold text-primary' => request()->routeIs('admin.users.*')
+                                ])>
                                     Quản lý Tài khoản
                                 </a>
                             </li>
                             <li class="nav-item mb-2">
-                                <a href="{{ route('news.index') }}"
-                                    class="nav-link {{ request()->routeIs('news.index') ? 'active fw-bold text-primary' : '' }}">
+                                <a href="{{ route('news.index') }}" @class([
+                                    'nav-link',
+                                    'active fw-bold text-primary' => request()->routeIs('news.index')
+                                ])>
                                     Chi tiết bài viết
                                 </a>
                             </li>
@@ -121,7 +127,11 @@
             @endif
 
             <!-- Content -->
-            <div class="flex-grow-1"
+            <div class="flex-grow-1" @class([
+                'container py-4',
+                'ms-0' => request()->routeIs('news.index') || request()->routeIs('news.show'),
+                'ms-240' => !request()->routeIs('news.index') && !request()->routeIs('news.show'),
+            ])
                 style="margin-left: {{ (request()->routeIs('news.index') || request()->routeIs('news.show')) ? '0' : '240px' }};">
                 <main class="py-4 container">
                     @yield('content')
@@ -141,14 +151,18 @@
                         <h4 class="text-center">User</h4>
                         <ul class="nav flex-column">
                             <li class="nav-item mb-2">
-                                <a href="{{ route('posts.index') }}"
-                                    class="nav-link {{ request()->routeIs('posts.index') ? 'active fw-bold text-primary' : '' }}">
+                                <a href="{{ route('posts.index') }}" @class([
+                                    'nav-link',
+                                    'active fw-bold text-primary' => request()->routeIs('posts.index')
+                                ])>
                                     Danh sách bài viết
                                 </a>
                             </li>
                             <li class="nav-item mb-2">
-                                <a href="{{ route('news.index') }}"
-                                    class="nav-link {{ request()->routeIs('news.index') ? 'active fw-bold text-primary' : '' }}">
+                                <a href="{{ route('news.index') }}" @class([
+                                    'nav-link',
+                                    'active fw-bold text-primary' => request()->routeIs('news.index')
+                                ])>
                                     Chi tiết bài viết
                                 </a>
                             </li>
@@ -158,7 +172,11 @@
             @endif
 
             <!-- Content -->
-            <div class="flex-grow-1"
+            <div class="flex-grow-1" @class([
+                'container py-4',
+                'ms-0' => request()->routeIs('news.index') || request()->routeIs('news.show'),
+                'ms-200' => !request()->routeIs('news.index') && !request()->routeIs('news.show'),
+            ])
                 style="margin-left: {{ (request()->routeIs('news.index') || request()->routeIs('news.show')) ? '0' : '200px' }};">
                 <main class="py-4 container">
                     @yield('content')
@@ -174,6 +192,7 @@
             </main>
         </div>
     @endif
+
 
 
 

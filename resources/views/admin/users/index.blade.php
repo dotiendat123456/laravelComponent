@@ -85,7 +85,7 @@
                     const page = (data.start / data.length) + 1; // Tính toán page từ start và length
 
                     // Gửi request tới route posts.data
-                    $.get('{{ route('admin.users.index') }}', {
+                    $.get(@json(route('admin.users.index')), {
                         page: page, // Laravel cần param này để phân trang
                         length: data.length, // Số lượng mỗi trang
                         draw: data.draw,     // Dùng để đồng bộ với client
@@ -145,26 +145,26 @@
                         orderable: false,
                         searchable: false,
                         render: function (data, type, row) {
-                            const editUrl = "{{ route('admin.users.edit', ':id') }}".replace(':id', row.id);
+                            const editUrl = @json(route('admin.users.edit', ':id')).replace(':id', row.id);
                             let buttons = '';
 
                             // Không cho phép chỉnh sửa chính mình
                             if (row.id !== @json(Auth::id())) {
                                 buttons += `<a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                                        Sửa
-                                                                    </a>`;
+                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                                    Sửa
+                                                                                </a>`;
 
                                 if (row.status_value === 3) {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
-                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
-                                                                            Mở khóa
-                                                                        </button>`;
+                                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
+                                                                                        Mở khóa
+                                                                                    </button>`;
                                 } else {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
-                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
-                                                                            Khóa
-                                                                        </button>`;
+                                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
+                                                                                        Khóa
+                                                                                    </button>`;
                                 }
                             } else {
                                 // Nếu là chính mình chỉ hiển thị dấu gạch ngang hoặc không hiển thị gì
@@ -207,7 +207,7 @@
 
             if (confirm(confirmMsg)) {
                 $.ajax({
-                    url: "{{ route('admin.users.toggleStatus', ':id') }}".replace(':id', id),
+                    url: @json(route('admin.users.toggleStatus', ':id')).replace(':id', id),
                     type: 'POST',
                     data: {
                         _token: @json(csrf_token()),

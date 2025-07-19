@@ -17,9 +17,17 @@ class NotifyUserPostStatusJob implements ShouldQueue
 
     public Post $post;
 
+    /**
+     * The name of the queue the job should be sent to.
+     *
+     * @var string
+     */
+    // public $queue = 'notifications';
+
     public function __construct(Post $post)
     {
         $this->post = $post;
+        $this->onQueue('change_status_post');
     }
 
     public function handle()

@@ -4,17 +4,18 @@ namespace App\Observers;
 
 use App\Models\Post;
 use Illuminate\Support\Str;
+use App\Helpers\SlugHelper;
 
 class PostObserver
 {
     public function created(Post $post): void
     {
-        $slug = Str::slug($post->title) . '-' . substr(md5($post->id), 0, 6);
+        $slug = SlugHelper::generateSlug($post->title, $post->id);
         $post->update(['slug' => $slug]);
     }
 
     public function updating(Post $post): void
     {
-        $post->slug = Str::slug($post->title) . '-' . substr(md5($post->id), 0, 6);
+        $post->slug = SlugHelper::generateSlug($post->title, $post->id);
     }
 }

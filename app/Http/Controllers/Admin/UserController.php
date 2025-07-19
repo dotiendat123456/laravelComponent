@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\AdminUpdateProfileRequest;
+use App\Http\Requests\Admin\UpdateProfileRequest;
 use App\Http\Resources\Admin\UserResource;
 use App\Models\User;
 use App\Services\Admin\UserService;
@@ -67,7 +67,7 @@ class UserController extends Controller
     /**
      * Cập nhật thông tin user.
      */
-    public function update(AdminUpdateProfileRequest $request, User $user)
+    public function update(UpdateProfileRequest $request, User $user)
     {
         $this->authorize('updateStatus', $user);
 

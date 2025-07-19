@@ -7,7 +7,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\ProfileController;
-use App\Http\Controllers\PostController;
+use App\Http\Controllers\User\PostController as UserPostController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 
@@ -39,9 +39,9 @@ Route::middleware(['auth', 'check.user.status'])->group(function () {
     // CRUD posts
     // Route phụ ngoài resource
     // Route::get('/posts/data', [PostController::class, 'data'])->name('posts.data');
-    Route::delete('/posts/destroy-all', [PostController::class, 'destroyAll'])->name('posts.destroy_all')->middleware('user');
+    Route::delete('/posts/destroy-all', [UserPostController::class, 'destroyAll'])->name('posts.destroy_all')->middleware('user');
 
-    Route::resource('posts', PostController::class)
+    Route::resource('posts', UserPostController::class)
         ->except(['show'])
         ->names('posts')
         ->parameters(['posts' => 'post'])
@@ -126,5 +126,5 @@ Route::middleware('guest')->group(function () {
 
 
 
-Route::get('/news', [PostController::class, 'publicIndex'])->name('news.index');
-Route::get('/news/{post:slug}', [PostController::class, 'publicShow'])->name('news.show');
+Route::get('/news', [UserPostController::class, 'publicIndex'])->name('news.index');
+Route::get('/news/{post:slug}', [UserPostController::class, 'publicShow'])->name('news.show');

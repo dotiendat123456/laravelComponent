@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Models\Post;                                // Model bài viết
 use App\Http\Controllers\Controller;                // Kế thừa Controller gốc của Laravel
-use App\Http\Requests\Admin\AdminStorePostRequest;  // Form Request validate khi tạo bài viết
-use App\Http\Requests\Admin\AdminUpdatePostRequest; // Form Request validate khi update bài viết
+use App\Http\Requests\Admin\StorePostRequest;  // Form Request validate khi tạo bài viết
+use App\Http\Requests\Admin\UpdatePostRequest; // Form Request validate khi update bài viết
 use App\Http\Resources\Admin\PostResource;          // Resource định dạng data cho DataTables
 use App\Services\Admin\PostService;                 // Service xử lý nghiệp vụ bài viết admin
 use Illuminate\Http\Request;                        // Request HTTP
@@ -77,7 +77,7 @@ class PostController extends Controller
     /**
      * Lưu bài viết mới từ form.
      */
-    public function store(AdminStorePostRequest $request)
+    public function store(StorePostRequest $request)
     {
         $this->authorize('create', Post::class);
 
@@ -109,7 +109,7 @@ class PostController extends Controller
     /**
      * Cập nhật bài viết.
      */
-    public function update(AdminUpdatePostRequest $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
         $this->authorize('updateStatus', $post);
 

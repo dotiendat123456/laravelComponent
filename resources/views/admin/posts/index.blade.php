@@ -27,9 +27,10 @@
                 <select name="status" id="filterStatus" class="form-select">
                     <option value="" {{ request()->has('status') ? '' : 'selected' }}>Tất cả trạng thái</option>
                     @foreach (\App\Enums\PostStatus::cases() as $status)
-                        <option value="{{ $status->value }}" {{ (string) request('status') === (string) $status->value ? 'selected' : '' }}>
+                        <option value="{{ $status->value }}" @selected((string) request('status') === (string) $status->value)>
                             {{ $status->label() }}
                         </option>
+
                     @endforeach
                 </select>
             </div>
@@ -87,7 +88,7 @@
                     const page = (data.start / data.length) + 1; // Tính toán page từ start và length
 
                     // Gửi request tới route posts.data
-                    $.get('{{ route('admin.posts.index') }}', {
+                    $.get(@json(route('admin.posts.index')), {
                         page: page, // Laravel cần param này để phân trang
                         length: data.length, // Số lượng mỗi trang
                         draw: data.draw,     // Dùng để đồng bộ với client
@@ -126,20 +127,21 @@
                         searchable: false,
                         render: function (data, type, row) {
                             //  Dùng route name với placeholder + replace
-                            const viewUrl = "{{ route('news.show', ':slug') }}".replace(':slug', row.slug);
-                            const editUrl = "{{ route('admin.posts.edit', ':id') }}".replace(':id', row.id);
+                            const viewUrl = @json(route('news.show', ':slug')).replace(':slug', row.slug);
+                            const editUrl = @json(route('admin.posts.edit', ':id')).replace(':id', row.id);
+
 
                             return `
-                                                    <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
-                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                    </a>
-                                                    <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
-                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                    </a>
-                                                    <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                                    </button>
-                                                `;
+                                                                <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                                </a>
+                                                                <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                </a>
+                                                                <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                                                </button>
+                                                            `;
                         }
                     }
                 ],
@@ -179,7 +181,7 @@
             if (confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
 
                 $.ajax({
-                    url: "{{ route('admin.posts.destroy', ':id') }}".replace(':id', id),
+                    url: @json(route('admin.posts.destroy', ':id')).replace(':id', id),
                     type: 'POST',
                     data: {
                         _method: 'DELETE',
@@ -198,7 +200,7 @@
         function deleteAllPosts() {
             if (confirm('Bạn có chắc chắn muốn xóa tất cả bài viết?')) {
                 $.ajax({
-                    url: `{{ route('admin.posts.destroy_all') }}`,
+                    url: @json(route('admin.posts.destroy_all')),
                     type: 'POST',
                     data: {
                         _method: 'DELETE',

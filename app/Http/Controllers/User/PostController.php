@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\User;
 
 use App\Models\Post;
 use App\Http\Requests\User\StorePostRequest;
 use App\Http\Requests\User\UpdatePostRequest;
-use App\Http\Resources\PostResource;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\User\PostResource;
 use App\Services\User\PostService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
