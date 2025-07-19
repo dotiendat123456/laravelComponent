@@ -18,7 +18,7 @@
             </div>
         @enderror
 
-        {{-- FORM TÌM KIẾM --}}
+        {{-- FORM TÌM KIẾM
         <form id="searchForm" method="GET" class="row g-2 mb-3">
             <div class="col-auto">
                 <input type="text" id="filterName" name="name" class="form-control" placeholder="Tên">
@@ -30,18 +30,26 @@
                 <select name="status" id="filterStatus" class="form-select">
                     <option value="" {{ request()->has('status') ? '' : 'selected' }}>Tất cả trạng thái</option>
                     @foreach (\App\Enums\UserStatus::cases() as $status)
-                        <option value="{{ $status->value }}" {{ (string) request('status') === (string) $status->value ? 'selected' : '' }}>
-                            {{ $status->label() }}
-                        </option>
+                    <option value="{{ $status->value }}" {{ (string) request('status')===(string) $status->value ?
+                        'selected' : '' }}>
+                        {{ $status->label() }}
+                    </option>
                     @endforeach
                 </select>
             </div>
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary">Lọc</button>
             </div>
-        </form>
+        </form> --}}
 
-        {{-- BẢNG --}}
+        <x-filter-form action="{{ route('admin.users.index') }}" :fields="[
+            ['name' => 'name', 'label' => 'Tên', 'placeholder' => 'Tên'],
+            ['name' => 'email', 'label' => 'Email', 'placeholder' => 'Email']
+        ]"
+        :statuses="\App\Enums\UserStatus::cases()" />
+
+
+        {{-- BẢNG
         <div class="table-responsive">
             <table id="usersTable" class="table table-striped table-hover align-middle table-fixed">
                 <thead class="table-light">
@@ -55,7 +63,18 @@
                     </tr>
                 </thead>
             </table>
-        </div>
+        </div> --}}
+        <x-table id="usersTable" :columns="[
+            ['label' => 'STT', 'class' => 'text-start'],
+            ['label' => 'Tên'],
+            ['label' => 'Email'],
+            ['label' => 'Địa chỉ'],
+            ['label' => 'Trạng thái'],
+            ['label' => 'Hành động']
+        ]" />
+
+
+
     </div>
 @endsection
 
@@ -151,20 +170,20 @@
                             // Không cho phép chỉnh sửa chính mình
                             if (row.id !== @json(Auth::id())) {
                                 buttons += `<a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                                                    Sửa
-                                                                                </a>`;
+                                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                                                    Sửa
+                                                                                                </a>`;
 
                                 if (row.status_value === 3) {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
-                                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
-                                                                                        Mở khóa
-                                                                                    </button>`;
+                                                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
+                                                                                                        Mở khóa
+                                                                                                    </button>`;
                                 } else {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
-                                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
-                                                                                        Khóa
-                                                                                    </button>`;
+                                                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
+                                                                                                        Khóa
+                                                                                                    </button>`;
                                 }
                             } else {
                                 // Nếu là chính mình chỉ hiển thị dấu gạch ngang hoặc không hiển thị gì

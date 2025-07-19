@@ -27,7 +27,7 @@
             </button>
         </div>
 
-        {{-- Form lọc dữ liệu theo tiêu đề và trạng thái --}}
+        {{-- Form lọc dữ liệu theo tiêu đề và trạng thái
         <form id="searchForm" class="row g-3 mb-3">
             <div class="col-auto">
                 <input type="text" name="title" id="filterTitle" class="form-control" placeholder="Tìm theo tiêu đề">
@@ -37,9 +37,9 @@
                 <select name="status" id="filterStatus" class="form-select">
                     <option value="" {{ request()->has('status') ? '' : 'selected' }}>Tất cả trạng thái</option>
                     @foreach (\App\Enums\PostStatus::cases() as $status)
-                        <option value="{{ $status->value }}" @selected((string) request('status') === (string) $status->value)>
-                            {{ $status->label() }}
-                        </option>
+                    <option value="{{ $status->value }}" @selected((string) request('status')===(string) $status->value)>
+                        {{ $status->label() }}
+                    </option>
 
                     @endforeach
                 </select>
@@ -49,24 +49,23 @@
             <div class="col-auto">
                 <button type="submit" class="btn btn-primary">Lọc</button>
             </div>
-        </form>
+        </form> --}}
+        <x-filter-form action="{{ route('admin.posts.index') }}" :fields="[
+            ['name' => 'title', 'label' => 'Tiêu đề', 'placeholder' => 'Tìm theo tiêu đề']
+        ]" :statuses="\App\Enums\PostStatus::cases()" />
+
 
         {{-- Bảng danh sách bài viết --}}
-        <div class="table-responsive">
-            <table id="postsTable" class="table table-striped table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>STT</th> {{-- Số thứ tự --}}
-                        <th>Thumbnail</th> {{-- Ảnh đại diện --}}
-                        <th>Tiêu đề</th>
-                        <th>Mô tả</th>
-                        <th>Ngày đăng</th>
-                        <th>Trạng thái</th>
-                        <th>Hành động</th> {{-- Xem, sửa, xóa --}}
-                    </tr>
-                </thead>
-            </table>
-        </div>
+        <x-table id="postsTable" :columns="[
+            ['label' => 'STT'],
+            ['label' => 'Thumbnail'],
+            ['label' => 'Tiêu đề'],
+            ['label' => 'Mô tả'],
+            ['label' => 'Ngày đăng'],
+            ['label' => 'Trạng thái'],
+            ['label' => 'Hành động']
+        ]" />
+
     </div>
 @endsection
 
@@ -137,17 +136,17 @@
                             const editUrl = @json(route('posts.edit', ':id')).replace(':id', row.id);
 
                             return `
-                                                                        <div class="d-inline-flex align-items-center gap-1">
-                                                                             <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
-                                                                                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                                             </a>
-                                                                             <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
-                                                                                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                                             </a>
-                                                                             <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
-                                                                                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                                                             </button>
-                                                                         </div>`;
+                                        <div class="d-inline-flex align-items-center gap-1">
+                                             <a href="${viewUrl}" class="btn btn-sm btn-outline-info p-1" target="_blank" title="Xem">
+                                                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                             </a>
+                                             <a href="${editUrl}" class="btn btn-sm btn-outline-warning p-1" title="Sửa">
+                                                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                             </a>
+                                             <button onclick="deletePost(${row.id})" class="btn btn-sm btn-outline-danger p-1" title="Xóa">
+                                                 <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                             </button>
+                                         </div>`;
                         }
                     }
                 ],
