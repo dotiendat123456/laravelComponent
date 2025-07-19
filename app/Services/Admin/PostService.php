@@ -53,7 +53,7 @@ class PostService
             }
         }
 
-        if (isset($data['status']) || $data['status'] === 0) {
+        if (isset($data['status']) && $data['status'] !== '') {
             $query->where('status', $data['status']);
         }
 

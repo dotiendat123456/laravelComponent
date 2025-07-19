@@ -12,7 +12,7 @@ use Illuminate\Http\Request;                        // Request HTTP
 use Illuminate\Support\Facades\Auth;                // Lấy user đang đăng nhập
 use Illuminate\Support\Facades\Log;                 // Ghi log
 
-class AdminPostController extends Controller
+class PostController extends Controller
 {
     protected $postService;
 

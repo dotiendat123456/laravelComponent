@@ -78,6 +78,11 @@ class UserService
             $query->where('email', 'like', "%{$data['email']}%");
         }
 
+        // Lọc theo status
+        if (isset($data['status']) && $data['status'] !== '') {
+            $query->where('status', $data['status']);
+        }
+
         // Các cột có thể sắp xếp
         $columns = [
 

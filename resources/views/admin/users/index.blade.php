@@ -27,6 +27,16 @@
                 <input type="text" id="filterEmail" name="email" class="form-control" placeholder="Email">
             </div>
             <div class="col-auto">
+                <select name="status" id="filterStatus" class="form-select">
+                    <option value="" {{ request()->has('status') ? '' : 'selected' }}>Tất cả trạng thái</option>
+                    @foreach (\App\Enums\UserStatus::cases() as $status)
+                        <option value="{{ $status->value }}" {{ (string) request('status') === (string) $status->value ? 'selected' : '' }}>
+                            {{ $status->label() }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
                 <button type="submit" class="btn btn-primary">Lọc</button>
             </div>
         </form>
@@ -70,7 +80,7 @@
                 searching: false,
                 pageLength: 5,
                 lengthMenu: [[1, 3, 5, 10, 15], [1, 3, 5, 10, 15]],
-                order:[0,'desc'],
+                order: [0, 'desc'],
                 ajax: function (data, callback) {
                     const page = (data.start / data.length) + 1; // Tính toán page từ start và length
 
@@ -83,9 +93,11 @@
                         order: data.order,   // Sắp xếp cột
                         columns: data.columns, // Cột được gửi lên
                         name: $('#filterName').val(), // Lọc tiêu đề
-                        email: $('#filterEmail').val() // Lọc trạng thái
+                        email: $('#filterEmail').val(), // Lọc Email
+                        status: $('#filterStatus').val(), // Lọc Status
                     }, function (response) {
                         // Callback để DataTable hiển thị dữ liệu
+                        console.log(response.data);
                         callback({
                             draw: response.draw,
                             recordsTotal: response.recordsTotal, // Tổng số bản ghi
@@ -112,16 +124,19 @@
 
                     {
                         data: null,
+                        // render: function (data, type, row) {
+                        //     // Hiển thị badge theo status_value
+                        //     let badgeClass = 'secondary';
+                        //     switch (row.status_value) {
+                        //         case 0: badgeClass = 'warning'; break; // PENDING
+                        //         case 1: badgeClass = 'success'; break; // APPROVED
+                        //         case 2: badgeClass = 'danger'; break;  // REJECTED
+                        //         case 3: badgeClass = 'dark'; break;    // LOCKED
+                        //     }
+                        //     return `<span class="badge bg-${badgeClass}">${row.status_label}</span>`;
+                        // }
                         render: function (data, type, row) {
-                            // Hiển thị badge theo status_value
-                            let badgeClass = 'secondary';
-                            switch (row.status_value) {
-                                case 0: badgeClass = 'warning'; break; // PENDING
-                                case 1: badgeClass = 'success'; break; // APPROVED
-                                case 2: badgeClass = 'danger'; break;  // REJECTED
-                                case 3: badgeClass = 'dark'; break;    // LOCKED
-                            }
-                            return `<span class="badge bg-${badgeClass}">${row.status_label}</span>`;
+                            return `<span class="badge bg-${row.status_badge_class}">${row.status_label}</span>`;
                         }
                     },
 
@@ -136,20 +151,20 @@
                             // Không cho phép chỉnh sửa chính mình
                             if (row.id !== @json(Auth::id())) {
                                 buttons += `<a href="${editUrl}" class="btn btn-sm btn-outline-warning" title="Sửa">
-                                                                                                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                                                                                Sửa
-                                                                                            </a>`;
+                                                                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                                                        Sửa
+                                                                    </a>`;
 
                                 if (row.status_value === 3) {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'unlock')" class="btn btn-sm btn-success ms-1" title="Mở khóa">
-                                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
-                                                                                                    Mở khóa
-                                                                                                </button>`;
+                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg> 
+                                                                            Mở khóa
+                                                                        </button>`;
                                 } else {
                                     buttons += `<button onclick="toggleStatus(${row.id}, 'lock')" class="btn btn-sm btn-danger ms-1" title="Khóa">
-                                                                                                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
-                                                                                                    Khóa
-                                                                                                </button>`;
+                                                                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 
+                                                                            Khóa
+                                                                        </button>`;
                                 }
                             } else {
                                 // Nếu là chính mình chỉ hiển thị dấu gạch ngang hoặc không hiển thị gì

@@ -18,4 +18,14 @@ enum UserStatus: int
             self::LOCKED => 'Bị khóa',
         };
     }
+
+    public function badgeClass(): string
+    {
+        return match ($this) {
+            self::PENDING => 'warning',
+            self::APPROVED => 'success',
+            self::REJECTED => 'danger',
+            self::LOCKED => 'dark',
+        };
+    }
 }

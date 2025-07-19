@@ -10,7 +10,7 @@ use App\Services\Admin\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
-class AdminUserController extends Controller
+class UserController extends Controller
 {
     protected $userService;
 
@@ -32,6 +32,7 @@ class AdminUserController extends Controller
             $data = [
                 'name' => $request->input('name'),
                 'email' => $request->input('email'),
+                'status' => $request->input('status'),
                 'order_column' => $request->input('order.0.column'),
                 'order_dir' => $request->input('order.0.dir', 'asc'),
                 'length' => intval($request->input('length', 10)),

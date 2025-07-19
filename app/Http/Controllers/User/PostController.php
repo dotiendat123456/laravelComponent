@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
-use App\Http\Requests\StorePostRequest;
-use App\Http\Requests\UpdatePostRequest;
+use App\Http\Requests\User\StorePostRequest;
+use App\Http\Requests\User\UpdatePostRequest;
 use App\Http\Resources\PostResource;
-use App\Services\PostService;
+use App\Services\User\PostService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
