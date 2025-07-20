@@ -55,19 +55,21 @@
 
 
             {{-- Nội dung --}}
-            <div class="mb-3">
+            {{-- <div class="mb-3">
                 <label class="form-label">Nội dung<span class="text-danger">*</span></label>
-                
-                <x-quill-editor 
-                    name="content" 
-                    :value="old('content', $post->content)" 
-                    height="300" 
-                />
+                 --}}
+            <x-quill-editor 
+                name="content" 
+                label="Nội dung"
+                :value="$post->content" 
+                height="300" 
+                required
+            />
 
-                @error('content')
+                {{-- @error('content')
                     <div class="text-danger">{{ $message }}</div>
                 @enderror
-            </div>
+            </div> --}}
 
             {{-- Ngày đăng --}}
             {{-- <div class="mb-3">

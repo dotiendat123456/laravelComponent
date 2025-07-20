@@ -60,15 +60,12 @@
                 @enderror
             </div> --}}
             {{-- Nội dung --}}
-            <div class="mb-3">
-                <label class="form-label">Nội dung<span class="text-danger">*</span></label>
-
-                <x-quill-editor name="content" :value="old('content')" height="300" />
-
-                @error('content')
-                    <div class="text-danger">{{ $message }}</div>
-                @enderror
-            </div>
+            <x-quill-editor 
+                name="content" 
+                label="Nội dung"
+                height="300" 
+                required
+            />
 
             {{-- Ngày đăng --}}
             {{-- <div class="mb-3">
