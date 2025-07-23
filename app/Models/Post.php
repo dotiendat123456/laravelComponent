@@ -52,11 +52,18 @@ class Post extends Model implements HasMedia
         'publish_date' => 'datetime',
         'status' => PostStatus::class,
     ];
-    /**
-     * The "booted" method of the model.
-     */
-    // protected static function booted(): void
-    // {
-    //     static::observe(PostObserver::class);
-    // }
+
+    public function likes()
+    {
+        return $this->hasMany(PostLike::class)->where('type', true);
+    }
+
+    public function dislikes()
+    {
+        return $this->hasMany(PostLike::class)->where('type', false);
+    }
+    public function comments()
+    {
+        return $this->hasMany(PostComment::class);
+    }
 }

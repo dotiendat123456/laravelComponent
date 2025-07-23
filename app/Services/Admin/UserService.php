@@ -14,53 +14,6 @@ class UserService
     /**
      * Lấy danh sách user có filter, sắp xếp, phân trang cho DataTables.
      */
-    // public function getUsersData(Request $request)
-    // {
-    //     // Khởi tạo query lấy danh sách tất cả người dùng
-    //     $query = User::query();
-
-    //     // Lọc theo tên đầy đủ (gộp first_name + last_name)
-    //     if ($request->filled('name')) {
-    //         $query->whereRaw(
-    //             "CONCAT(first_name, ' ', last_name) LIKE ?",
-    //             ["%{$request->name}%"]
-    //         );
-    //     }
-
-    //     // Lọc theo email
-    //     if ($request->filled('email')) {
-    //         $query->where('email', 'like', "%{$request->email}%");
-    //     }
-
-    //     // Các cột có thể sắp xếp được trong bảng DataTables
-    //     $columns = [
-    //         0 => 'first_name', // Cột tên
-    //         1 => 'email',      // Cột email
-    //         2 => 'address',    // Cột địa chỉ
-    //         3 => 'status',     // Cột trạng thái
-    //     ];
-
-    //     // Lấy thông tin sắp xếp từ DataTables
-    //     $orderColIndex = $request->input('order.0.column'); // Vị trí cột được sắp xếp
-    //     $orderDir = $request->input('order.0.dir', 'asc');  // Chiều sắp xếp (asc/desc), mặc định là asc
-
-    //     // Nếu không có cột sắp xếp hoặc không hợp lệ thì mặc định sắp xếp theo ID giảm dần (mới nhất lên đầu)
-    //     if ($orderColIndex === null || !isset($columns[$orderColIndex])) {
-    //         $query->orderByDesc('id');
-    //     } else {
-    //         $query->orderBy($columns[$orderColIndex], $orderDir);
-    //     }
-
-    //     // Xử lý phân trang theo chuẩn DataTables
-    //     $length = intval($request->input('length', 10)); // Số lượng bản ghi mỗi trang (default 10)
-    //     $start = intval($request->input('start', 0));    // Vị trí bắt đầu (offset)
-    //     $page = ($start / $length) + 1;                  // Tính số trang hiện tại
-
-    //     // Trả về danh sách người dùng đã phân trang
-    //     return $query->paginate($length, ['*'], 'page', $page);
-    // }
-
-
     public function getUsersData(array $data)
     {
         $query = User::query();

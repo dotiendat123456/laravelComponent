@@ -120,15 +120,7 @@ class PostService
      */
     public function deletePost(Post $post)
     {
-        DB::beginTransaction();
-
-        try {
-            $post->delete();
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        $post->delete();
     }
 
     /**
@@ -137,28 +129,28 @@ class PostService
     public function deleteAllUserPosts()
     {
         $user = Auth::user();
-
-        DB::beginTransaction();
-
-        try {
-            $user->posts()->delete();
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        $user->posts()->delete();
     }
 
     /**
      * Lấy danh sách bài viết public cho trang news.
      */
+    // public function getPublicPosts()
+    // {
+    //     return Post::status(PostStatus::APPROVED->value)
+    //         ->where('publish_date', '<=', now())
+    //         ->latest('publish_date')
+    //         ->paginate(2);
+    // }
     public function getPublicPosts()
     {
-        return Post::status(PostStatus::APPROVED->value)
+        return Post::withCount(['likes', 'dislikes', 'comments'])
+            ->status(PostStatus::APPROVED->value)
             ->where('publish_date', '<=', now())
             ->latest('publish_date')
             ->paginate(2);
     }
+
 
     /**
      * Kiểm tra bài viết có phải public không.

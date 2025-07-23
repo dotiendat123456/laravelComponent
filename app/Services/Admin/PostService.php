@@ -146,15 +146,7 @@ class PostService
      */
     public function deletePost(Post $post)
     {
-        DB::beginTransaction();
-
-        try {
-            $post->delete();
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        $post->delete();
     }
 
     /**
@@ -162,14 +154,6 @@ class PostService
      */
     public function deleteAllPosts()
     {
-        DB::beginTransaction();
-
-        try {
-            Post::query()->delete();
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        Post::query()->delete();
     }
 }

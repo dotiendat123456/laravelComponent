@@ -10,7 +10,8 @@ use App\Http\Controllers\Auth\ProfileController;
 use App\Http\Controllers\User\PostController as UserPostController;
 use App\Http\Controllers\Admin\PostController as AdminPostController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-
+use App\Http\Controllers\PostCommentController;
+use App\Http\Controllers\PostLikeController;
 
 // Trang mặc định
 // Route::get('/', fn() => view('welcome'));
@@ -128,3 +129,8 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/news', [UserPostController::class, 'publicIndex'])->name('news.index');
 Route::get('/news/{post:slug}', [UserPostController::class, 'publicShow'])->name('news.show');
+Route::middleware('auth')->group(function () {
+    Route::post('/posts/{post}/react/{type}', [PostLikeController::class, 'react'])->name('posts.react'); // ✅ Tốt
+    Route::post('/posts/{post}/comments', [PostCommentController::class, 'store'])->name('posts.comments.store'); // ✅ OK
+    Route::delete('/comments/{comment}', [PostCommentController::class, 'destroy'])->name('posts.comments.destroy'); // ⚠️ Cần sửa nhẹ
+});

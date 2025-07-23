@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserStatus;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -21,7 +22,7 @@ class AdminUserSeeder extends Seeder
             'email' => 'superadmin@khgc.com',
             'password' => Hash::make('Abcd@1234'),
             'address' => 'Admin Address',
-            'status' => 1,
+            'status' => UserStatus::APPROVED,
             'role' => 'admin',
         ]);
     }

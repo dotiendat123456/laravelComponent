@@ -8,7 +8,7 @@
 
         <div id="posts-list">
             @forelse ($posts as $post)
-                <div class="row mb-4">
+                <div class="row mb-4 pb-3 border-bottom">
                     <div class="col-md-4">
                         @if ($post->thumbnail)
                             <img src="{{ $post->thumbnail }}" alt="{{ $post->title }}" class="img-fluid rounded news-thumbnail">
@@ -18,16 +18,24 @@
                         @endif
                     </div>
                     <div class="col-md-8">
-                        <h5 class="news-title">
+                        <h5 class="news-title mb-1">
                             <a href="{{ route('news.show', $post) }}" class="text-dark fw-bold">
                                 {{ $post->title }}
                             </a>
                         </h5>
-                        <p class="text-muted small mb-1">
-                            {{ $post->publish_date ? $post->publish_date->format('H:i d/m/Y') : '' }}
+
+                        <p class="text-muted small mb-2">
+                            Ngày đăng: {{ $post->publish_date ? $post->publish_date->format('H:i d/m/Y') : '' }}
                         </p>
-                        <p class="news-description">
+
+                        <p class="news-description mb-2">
                             {{ $post->description }}
+                        </p>
+
+                        <p class="text-muted small mt-2 mb-0">
+                            Like: {{ $post->likes_count ?? $post->likes()->count() }} |
+                            Dislike: {{ $post->dislikes_count ?? $post->dislikes()->count() }} |
+                            Bình luận: {{ $post->comments_count ?? $post->comments()->count() }}
                         </p>
                     </div>
                 </div>
@@ -42,29 +50,19 @@
 
 @push('scripts')
     <script>
-        // Khi người dùng bấm vào link phân trang trong #posts-list
+        // Phân trang AJAX
         $(document).on('click', '#posts-list .pagination a', function (e) {
-            e.preventDefault(); // Ngăn hành vi chuyển trang mặc định (load trang mới)
-
-            let url = $(this).attr('href'); // Lấy URL của link phân trang
-
-            // Gọi Ajax GET đến URL đó
+            e.preventDefault();
+            let url = $(this).attr('href');
             $.get(url, function (data) {
-
-                // Do server trả về view đầy đủ (kể cả layout), ta chỉ lấy phần #posts-list
                 let html = $(data).find('#posts-list').html();
-
-                // Thay thế nội dung hiện tại của #posts-list bằng nội dung mới
                 $('#posts-list').html(html);
             }).fail(function () {
-                // Nếu có lỗi khi load dữ liệu
                 alert('Lỗi khi tải trang.');
             });
         });
     </script>
 @endpush
-
-
 
 @push('styles')
     <style>
@@ -77,7 +75,6 @@
         .news-title a {
             display: -webkit-box;
             -webkit-line-clamp: 2;
-            /* Giới hạn 2 dòng */
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -86,7 +83,6 @@
         .news-description {
             display: -webkit-box;
             -webkit-line-clamp: 3;
-            /* Giới hạn 3 dòng */
             -webkit-box-orient: vertical;
             overflow: hidden;
             text-overflow: ellipsis;
