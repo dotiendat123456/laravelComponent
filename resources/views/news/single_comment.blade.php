@@ -44,4 +44,8 @@
             @include('news.single_comment', ['comment' => $reply, 'post' => $post, 'level' => $level + 1])
         @endforeach
     </div>
+    {{-- Dấu gạch ngang sau comment cha --}}
+    @if ($level === 0)
+        <hr class="comment-divider my-4">
+    @endif
 </div>

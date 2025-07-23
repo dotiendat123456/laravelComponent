@@ -57,7 +57,7 @@
             <p><a href="{{ route('login') }}">Đăng nhập</a> để bình luận.</p>
         @endauth
 
-        <div id="comment-list">
+        <div id="comment-list" >
             @foreach ($post->comments->where('parent_id', null) as $comment)
                 @include('news.single_comment', ['comment' => $comment, 'post' => $post, 'level' => 0])
             @endforeach
