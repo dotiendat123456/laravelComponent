@@ -65,7 +65,8 @@ class NewsService
             'post_id' => $post->id,
             'user_id' => Auth::id(),
             'parent_id' => $data['parent_id'] ?? null,
-            'content' => $data['content'],
+            // 'content' => $data['content'],
+            'content' => strip_tags($data['content']),
         ]);
     }
 
