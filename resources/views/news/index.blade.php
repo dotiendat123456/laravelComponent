@@ -32,11 +32,26 @@
                             {{ $post->description }}
                         </p>
 
-                        <p class="text-muted small mt-2 mb-0">
+                        {{-- <p class="text-muted small mt-2 mb-0">
                             Like: {{ $post->likes_count ?? $post->likes()->count() }} |
                             Dislike: {{ $post->dislikes_count ?? $post->dislikes()->count() }} |
                             Bình luận: {{ $post->comments_count ?? $post->comments()->count() }}
+                        </p> --}}
+                        <p class="text-muted small mt-2 mb-0 d-flex align-items-center gap-3">
+                            <span class="d-flex align-items-center gap-1">
+                                <i class="bi bi-hand-thumbs-up"></i>
+                                {{ $post->likes_count ?? $post->likes()->count() }}
+                            </span>
+                            <span class="d-flex align-items-center gap-1">
+                                <i class="bi bi-hand-thumbs-down"></i>
+                                {{ $post->dislikes_count ?? $post->dislikes()->count() }}
+                            </span>
+                            <span class="d-flex align-items-center gap-1">
+                                <i class="bi bi-chat-dots"></i>
+                                {{ $post->comments_count ?? $post->comments()->count() }}
+                            </span>
                         </p>
+
                     </div>
                 </div>
             @empty
