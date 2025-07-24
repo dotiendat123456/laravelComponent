@@ -174,11 +174,22 @@ class PostController extends Controller
     /**
      * Trang chi tiết bài viết công khai.
      */
+    // public function publicShow(Post $post)
+    // {
+    //     if (! $this->postService->isPublicPost($post)) {
+    //         abort(404);
+    //     }
+    //     $post->load(['comments.replies', 'userReaction']);
+    //     return view('news.show', compact('post'));
+    // }
     public function publicShow(Post $post)
     {
         if (! $this->postService->isPublicPost($post)) {
             abort(404);
         }
+
+        $post->load(['comments.replies', 'userReaction'])
+            ->loadCount(['likes', 'dislikes']);
 
         return view('news.show', compact('post'));
     }

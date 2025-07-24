@@ -11,6 +11,7 @@ use App\Enums\UserRole;
 use App\Enums\PostStatus;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use App\Observers\PostObserver;
+use Illuminate\Support\Facades\Auth;
 
 
 #[ObservedBy([PostObserver::class])]
@@ -66,9 +67,10 @@ class Post extends Model implements HasMedia
     // {
     //     return $this->hasMany(PostComment::class);
     // }
+ 
     public function likes()
     {
-        return $this->morphMany(PostLike::class, 'likeable');
+        return $this->morphMany(PostLike::class, 'likeable')->where('type', true);
     }
 
     public function dislikes()
@@ -79,5 +81,13 @@ class Post extends Model implements HasMedia
     public function comments()
     {
         return $this->morphMany(PostComment::class, 'commentable')->with('replies');
+    }
+
+
+    //Tạo accessor
+    public function userReaction()
+    {
+        return $this->morphOne(PostLike::class, 'likeable')
+            ->where('user_id', Auth::id());
     }
 }

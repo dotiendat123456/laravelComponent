@@ -13,35 +13,7 @@ use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class NewsService
 {
-    // public function react(array $data): array
-    // {
-    //     $user = Auth::user();
-    //     $post = $data['post'];
-    //     $isLike = $data['type'] === 'like';
 
-    //     $reaction = PostLike::where('user_id', $user->id)
-    //         ->where('post_id', $post->id)
-    //         ->first();
-
-    //     if ($reaction) {
-    //         if ($reaction->type === $isLike) {
-    //             $reaction->delete();
-    //         } else {
-    //             $reaction->update(['type' => $isLike]);
-    //         }
-    //     } else {
-    //         PostLike::create([
-    //             'user_id' => $user->id,
-    //             'post_id' => $post->id,
-    //             'type' => $isLike,
-    //         ]);
-    //     }
-
-    //     return [
-    //         'like_count' => $post->likes()->count(),
-    //         'dislike_count' => $post->dislikes()->count(),
-    //     ];
-    // }
     public function react(array $data): array
     {
         $user = Auth::user();
@@ -55,11 +27,28 @@ class NewsService
 
         $currentReaction = null;
 
+        // if ($reaction) {
+        //     if ($reaction->type === $isLike) {
+        //         $reaction->delete(); // toggle off
+        //     } else {
+        //         $reaction->update(['type' => $isLike]);
+        //         $currentReaction = $isLike ? 'like' : 'dislike';
+        //     }
+        // } else {
+        //     PostLike::create([
+        //         'user_id' => $user->id,
+        //         'likeable_id' => $model->id,
+        //         'likeable_type' => get_class($model),
+        //         'type' => $isLike,
+        //     ]);
+        //     $currentReaction = $isLike ? 'like' : 'dislike';
+        // }
         if ($reaction) {
-            if ($reaction->type === $isLike) {
-                $reaction->delete(); // toggle off
+            if ($reaction->type === $isLike) { // So sánh đúng kiểu boolean
+                $reaction->delete(); // Xóa phản hồi nếu cùng loại
+                $currentReaction = null;
             } else {
-                $reaction->update(['type' => $isLike]);
+                $reaction->update(['type' => $isLike]); // Chuyển đổi type
                 $currentReaction = $isLike ? 'like' : 'dislike';
             }
         } else {
@@ -73,8 +62,8 @@ class NewsService
         }
 
         return [
-            'like_count' => $model->likes()->count(),
-            'dislike_count' => $model->dislikes()->count(),
+            'like_count' => $model->likes()->get()->count(),        // hoặc collect xử lý
+            'dislike_count' => $model->dislikes()->get()->count(),
             'current_reaction' => $currentReaction,
         ];
     }

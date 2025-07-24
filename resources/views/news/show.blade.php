@@ -48,22 +48,30 @@
             </a>
             @endif --}}
             @auth
+                @php
+                    $userReaction = optional($post->userReaction);
+                    $isLiked = $userReaction->type === true;
+                    $isDisliked = $userReaction->type === false;
+                @endphp
+
                 <form method="POST" action="{{ route('posts.react', [$post, 'like']) }}" class="react-form" data-type="like">
                     @csrf
-                    <button type="submit" class="btn btn-outline-success d-flex align-items-center gap-1 react-btn"
+                    <button type="submit"
+                        class="btn {{ $isLiked ? 'btn-success' : 'btn-outline-success' }} d-flex align-items-center gap-1 react-btn"
                         data-button="like">
-                        <i class="bi bi-hand-thumbs-up"></i>
-                        <span id="like-count">{{ $post->likes()->count() }}</span>
+                        <i class="bi {{ $isLiked ? 'bi-hand-thumbs-up-fill' : 'bi-hand-thumbs-up' }}"></i>
+                        <span id="like-count">{{ $post->likes_count }}</span>
                     </button>
                 </form>
 
                 <form method="POST" action="{{ route('posts.react', [$post, 'dislike']) }}" class="react-form"
                     data-type="dislike">
                     @csrf
-                    <button type="submit" class="btn btn-outline-danger d-flex align-items-center gap-1 react-btn"
+                    <button type="submit"
+                        class="btn {{ $isDisliked ? 'btn-danger' : 'btn-outline-danger' }} d-flex align-items-center gap-1 react-btn"
                         data-button="dislike">
-                        <i class="bi bi-hand-thumbs-down"></i>
-                        <span id="dislike-count">{{ $post->dislikes()->count() }}</span>
+                        <i class="bi {{ $isDisliked ? 'bi-hand-thumbs-down-fill' : 'bi-hand-thumbs-down' }}"></i>
+                        <span id="dislike-count">{{ $post->dislikes_count }}</span>
                     </button>
                 </form>
 
