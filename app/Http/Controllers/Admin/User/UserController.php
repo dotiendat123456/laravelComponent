@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\User\UpdateProfileRequest;
-use App\Http\Resources\Admin\UserResource;
+use App\Http\Resources\Admin\User\UserResource;
 use App\Models\User;
 use App\Services\Admin\UserService;
 use Illuminate\Http\Request;

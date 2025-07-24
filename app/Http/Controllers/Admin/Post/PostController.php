@@ -6,7 +6,7 @@ use App\Models\Post;                                // Model bài viết
 use App\Http\Controllers\Controller;                // Kế thừa Controller gốc của Laravel
 use App\Http\Requests\Admin\Post\StorePostRequest;  // Form Request validate khi tạo bài viết
 use App\Http\Requests\Admin\Post\UpdatePostRequest; // Form Request validate khi update bài viết
-use App\Http\Resources\Admin\PostResource;          // Resource định dạng data cho DataTables
+use App\Http\Resources\Admin\Post\PostResource;          // Resource định dạng data cho DataTables
 use App\Services\Admin\PostService;                 // Service xử lý nghiệp vụ bài viết admin
 use Illuminate\Http\Request;                        // Request HTTP
 use Illuminate\Support\Facades\Auth;                // Lấy user đang đăng nhập
