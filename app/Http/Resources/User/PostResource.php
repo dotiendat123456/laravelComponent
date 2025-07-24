@@ -21,7 +21,8 @@ class PostResource extends JsonResource
             'thumbnail' => $this->thumbnail,
             'title' => Str::limit($this->title, 50),
             'description' => Str::limit($this->description, 50),
-            'publish_date' => $this->publish_date->format('d/m/Y'),
+            // 'publish_date' => $this->publish_date->format('d/m/Y'),
+            'publish_date' => format_date($this->publish_date),
             'status' => $this->status->label(),
         ];
     }
