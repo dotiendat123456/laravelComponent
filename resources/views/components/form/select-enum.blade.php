@@ -8,7 +8,10 @@
 
     <select name="{{ $name }}" id="{{ $name }}" class="form-select @error($name) is-invalid @enderror">
         @foreach ($options() as $option)
-            <option value="{{ $option->value }}" {{ old($name, $selected) == $option->value ? 'selected' : '' }}>
+            {{-- <option value="{{ $option->value }}" {{ old($name, $selected)==$option->value ? 'selected' : '' }}>
+                {{ $option->label() }}
+            </option> --}}
+            <option value="{{ $option->value }}" @selected(old($name, $selected) == $option->value)>
                 {{ $option->label() }}
             </option>
         @endforeach
