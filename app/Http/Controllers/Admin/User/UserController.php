@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Admin\User;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\UpdateProfileRequest;
+use App\Http\Requests\Admin\User\UpdateProfileRequest;
 use App\Http\Resources\Admin\UserResource;
 use App\Models\User;
 use App\Services\Admin\UserService;
