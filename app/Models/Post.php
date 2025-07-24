@@ -53,17 +53,31 @@ class Post extends Model implements HasMedia
         'status' => PostStatus::class,
     ];
 
+    // public function likes()
+    // {
+    //     return $this->hasMany(PostLike::class)->where('type', true);
+    // }
+
+    // public function dislikes()
+    // {
+    //     return $this->hasMany(PostLike::class)->where('type', false);
+    // }
+    // public function comments()
+    // {
+    //     return $this->hasMany(PostComment::class);
+    // }
     public function likes()
     {
-        return $this->hasMany(PostLike::class)->where('type', true);
+        return $this->morphMany(PostLike::class, 'likeable');
     }
 
     public function dislikes()
     {
-        return $this->hasMany(PostLike::class)->where('type', false);
+        return $this->morphMany(PostLike::class, 'likeable')->where('type', false);
     }
+
     public function comments()
     {
-        return $this->hasMany(PostComment::class);
+        return $this->morphMany(PostComment::class, 'commentable')->with('replies');
     }
 }

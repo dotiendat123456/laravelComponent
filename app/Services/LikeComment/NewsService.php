@@ -45,42 +45,68 @@ class NewsService
     public function react(array $data): array
     {
         $user = Auth::user();
-        $post = $data['post'];
+        $model = $data['post']; // Bất kỳ model nào hỗ trợ like
         $isLike = $data['type'] === 'like';
 
         $reaction = PostLike::where('user_id', $user->id)
-            ->where('post_id', $post->id)
+            ->where('likeable_id', $model->id)
+            ->where('likeable_type', get_class($model))
             ->first();
 
         $currentReaction = null;
 
         if ($reaction) {
             if ($reaction->type === $isLike) {
-                // Nếu đã like/dislike rồi bấm lại → huỷ
-                $reaction->delete();
+                $reaction->delete(); // toggle off
             } else {
-                // Chuyển đổi trạng thái
                 $reaction->update(['type' => $isLike]);
                 $currentReaction = $isLike ? 'like' : 'dislike';
             }
         } else {
-            // Chưa có phản ứng → tạo mới
             PostLike::create([
                 'user_id' => $user->id,
-                'post_id' => $post->id,
+                'likeable_id' => $model->id,
+                'likeable_type' => get_class($model),
                 'type' => $isLike,
             ]);
             $currentReaction = $isLike ? 'like' : 'dislike';
         }
 
         return [
-            'like_count' => $post->likes()->count(),
-            'dislike_count' => $post->dislikes()->count(),
-            'current_reaction' => $currentReaction, 
+            'like_count' => $model->likes()->count(),
+            'dislike_count' => $model->dislikes()->count(),
+            'current_reaction' => $currentReaction,
         ];
     }
 
 
+
+    // public function addComment(array $data): PostComment
+    // {
+    //     $post = Post::find($data['post_id']);
+    //     if (!$post) {
+    //         throw ValidationException::withMessages([
+    //             'post_id' => 'Bài viết không tồn tại.',
+    //         ]);
+    //     }
+
+    //     if (!empty($data['parent_id'])) {
+    //         $parentComment = PostComment::find($data['parent_id']);
+    //         if (!$parentComment || $parentComment->post_id !== $post->id) {
+    //             throw ValidationException::withMessages([
+    //                 'parent_id' => 'Bình luận cha không hợp lệ.',
+    //             ]);
+    //         }
+    //     }
+
+    //     return PostComment::create([
+    //         'post_id' => $post->id,
+    //         'user_id' => Auth::id(),
+    //         'parent_id' => $data['parent_id'] ?? null,
+    //         // 'content' => $data['content'],
+    //         'content' => strip_tags($data['content']),
+    //     ]);
+    // }
     public function addComment(array $data): PostComment
     {
         $post = Post::find($data['post_id']);
@@ -92,7 +118,7 @@ class NewsService
 
         if (!empty($data['parent_id'])) {
             $parentComment = PostComment::find($data['parent_id']);
-            if (!$parentComment || $parentComment->post_id !== $post->id) {
+            if (!$parentComment || $parentComment->commentable_id !== $post->id || $parentComment->commentable_type !== Post::class) {
                 throw ValidationException::withMessages([
                     'parent_id' => 'Bình luận cha không hợp lệ.',
                 ]);
@@ -100,13 +126,14 @@ class NewsService
         }
 
         return PostComment::create([
-            'post_id' => $post->id,
+            'commentable_id' => $post->id,
+            'commentable_type' => Post::class,
             'user_id' => Auth::id(),
             'parent_id' => $data['parent_id'] ?? null,
-            // 'content' => $data['content'],
             'content' => strip_tags($data['content']),
         ]);
     }
+
 
     /**
      * Xoá bình luận nếu có quyền
