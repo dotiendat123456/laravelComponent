@@ -24,16 +24,16 @@ class UpdatePostRequest extends FormRequest
             'thumbnail' => ['nullable', 'image', 'max:2048'],
         ];
 
-        if (Auth::check() && Auth::user()->isAdmin()) {
-            $rules['status'] = [
-                'required',
-                Rule::in([
-                    PostStatus::PENDING->value,
-                    PostStatus::APPROVED->value,
-                    PostStatus::DENY->value,
-                ]),
-            ];
-        }
+        // if (Auth::check() && Auth::user()->isAdmin()) {
+        //     $rules['status'] = [
+        //         'required',
+        //         Rule::in([
+        //             PostStatus::PENDING->value,
+        //             PostStatus::APPROVED->value,
+        //             PostStatus::DENY->value,
+        //         ]),
+        //     ];
+        // }
 
         return $rules;
     }
@@ -59,8 +59,8 @@ class UpdatePostRequest extends FormRequest
             'thumbnail.image' => 'Thumbnail phải là định dạng ảnh.',
             'thumbnail.max' => 'Thumbnail không được vượt quá 2MB.',
 
-            'status.required' => 'Vui lòng chọn trạng thái.',
-            'status.in' => 'Trạng thái bài viết không hợp lệ.',
+            // 'status.required' => 'Vui lòng chọn trạng thái.',
+            // 'status.in' => 'Trạng thái bài viết không hợp lệ.',
         ];
     }
 }

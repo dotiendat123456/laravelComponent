@@ -20,15 +20,7 @@ class UpdateProfileRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:255'],
             'last_name'  => ['required', 'string', 'max:255'],
             'address'    => ['nullable', 'string', 'max:255'],
-            'status'     => [
-                'required',
-                Rule::in([
-                    UserStatus::PENDING->value,
-                    UserStatus::APPROVED->value,
-                    UserStatus::REJECTED->value,
-                    UserStatus::LOCKED->value,
-                ])
-            ],
+            'status'     => ['required',  Rule::enum(UserStatus::class)],
         ];
     }
 
@@ -38,7 +30,7 @@ class UpdateProfileRequest extends FormRequest
             'first_name.required' => 'Vui lòng nhập tên.',
             'last_name.required'  => 'Vui lòng nhập họ.',
             'status.required'     => 'Vui lòng chọn trạng thái.',
-            'status.in'           => 'Trạng thái không hợp lệ.',
+            'status.enum'           => 'Trạng thái không hợp lệ.',
         ];
     }
 }

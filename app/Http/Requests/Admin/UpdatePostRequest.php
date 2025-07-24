@@ -21,18 +21,8 @@ class UpdatePostRequest extends FormRequest
             'content' => ['required', 'string'],
             'publish_date' => ['required', 'date'],
             'thumbnail' => ['nullable', 'image', 'max:2048'],
+            'status' => ['required', Rule::enum(PostStatus::class)],
         ];
-
-        if ($this->user()->isAdmin()) {
-            $rules['status'] = [
-                'required',
-                Rule::in([
-                    PostStatus::PENDING->value,
-                    PostStatus::APPROVED->value,
-                    PostStatus::DENY->value,
-                ]),
-            ];
-        }
 
         return $rules;
     }
@@ -59,7 +49,7 @@ class UpdatePostRequest extends FormRequest
             'thumbnail.max' => 'Thumbnail không được vượt quá 2MB.',
 
             'status.required' => 'Vui lòng chọn trạng thái.',
-            'status.in' => 'Trạng thái bài viết không hợp lệ.',
+            'status.enum' => 'Trạng thái bài viết không hợp lệ.',
         ];
     }
 }
