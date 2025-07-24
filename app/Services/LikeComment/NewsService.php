@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
-
 class NewsService
 {
     public function react(array $data): array

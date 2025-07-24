@@ -45,6 +45,26 @@ class PostCommentController extends Controller
         $this->newsService = $newsService;
     }
 
+    // public function store(StoreCommentRequest $request, Post $post)
+    // {
+    //     $validated = $request->validated();
+    //     $validated['post_id'] = $post->id;
+
+    //     try {
+    //         $comment = $this->newsService->addComment($validated);
+    //     } catch (ValidationException $e) {
+    //         return response()->json(['error' => $e->errors()], 422);
+    //     }
+
+    //     $view = view('news.single_comment', [
+    //         'comment' => $comment,
+    //         'post' => $post,
+    //         'level' => $request->input('level', 1),
+    //     ])->render();
+
+    //     return response()->json(['html' => $view, 'message' => 'Đã thêm bình luận']);
+    // }
+
     public function store(StoreCommentRequest $request, Post $post)
     {
         $validated = $request->validated();
@@ -56,15 +76,24 @@ class PostCommentController extends Controller
             return response()->json(['error' => $e->errors()], 422);
         }
 
+        $parentComment = null;
+        if (!empty($validated['parent_id'])) {
+            $parentComment = PostComment::find($validated['parent_id']);
+        }
+
         $view = view('news.single_comment', [
             'comment' => $comment,
             'post' => $post,
             'level' => $request->input('level', 1),
         ])->render();
 
-        return response()->json(['html' => $view, 'message' => 'Đã thêm bình luận']);
+        return response()->json([
+            'html' => $view,
+            'message' => 'Đã thêm bình luận',
+            'parent_id' => $parentComment ? $parentComment->id : null,
+            'reply_count' => $parentComment ? $parentComment->replies()->count() : null,
+        ]);
     }
-
 
 
 

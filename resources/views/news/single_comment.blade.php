@@ -1,5 +1,6 @@
 @php
     $margin = $level * 30;
+    $hasReplies = $comment->replies->count() > 0;
 @endphp
 
 <div id="comment-{{ $comment->id }}" style="margin-left: {{ $margin }}px; margin-bottom: 15px;">
@@ -13,7 +14,7 @@
             Phản hồi
         </button>
 
-        {{-- Nút xoá nếu là chủ sở hữu hoặc admin --}}
+        {{-- Nút xoá --}}
         @if (auth()->id() === $comment->user_id || auth()->user()->isAdmin())
             <form method="POST" class="d-inline delete-comment-form" data-id="{{ $comment->id }}"
                 action="{{ route('posts.comments.destroy', $comment->id) }}">
@@ -24,7 +25,7 @@
         @endif
 
         {{-- Form phản hồi (ẩn) --}}
-        <div id="reply-form-{{ $comment->id }}" class="reply-form" style="display:none; margin-top:10px;">
+        <div id="reply-form-{{ $comment->id }}" class="reply-form mt-2" style="display:none;">
             <form method="POST" class="reply-submit-form" data-parent="{{ $comment->id }}"
                 action="{{ route('posts.comments.store', $post) }}">
                 @csrf
@@ -38,13 +39,20 @@
         </div>
     @endauth
 
-    {{-- Hiển thị replies đệ quy (luôn hiển thị) --}}
-    <div class="replies" id="replies-{{ $comment->id }}">
+    {{-- Nút hiện/ẩn replies nếu có --}}
+    @if ($hasReplies)
+        <button class="btn btn-sm btn-link toggle-replies mt-2" data-target="replies-{{ $comment->id }}">
+            Hiện {{ $comment->replies->count() }} phản hồi
+        </button>
+    @endif
+
+    {{-- Vùng replies (ẩn mặc định) --}}
+    <div class="replies mt-2 d-none" id="replies-{{ $comment->id }}">
         @foreach ($comment->replies as $reply)
             @include('news.single_comment', ['comment' => $reply, 'post' => $post, 'level' => $level + 1])
         @endforeach
     </div>
-    {{-- Dấu gạch ngang sau comment cha --}}
+
     @if ($level === 0)
         <hr class="comment-divider my-4">
     @endif

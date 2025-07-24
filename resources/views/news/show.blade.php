@@ -57,7 +57,7 @@
             <p><a href="{{ route('login') }}">Đăng nhập</a> để bình luận.</p>
         @endauth
 
-        <div id="comment-list" >
+        <div id="comment-list">
             @foreach ($post->comments->where('parent_id', null) as $comment)
                 @include('news.single_comment', ['comment' => $comment, 'post' => $post, 'level' => 0])
             @endforeach
@@ -91,6 +91,53 @@
 
             // Gửi bình luận / phản hồi
             document.addEventListener('submit', function (e) {
+                // if (e.target.matches('.reply-submit-form')) {
+                //     e.preventDefault();
+                //     const form = e.target;
+                //     const formData = new FormData(form);
+
+                //     fetch(form.action, {
+                //         method: 'POST',
+                //         headers: {
+                //             'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                //             'Accept': 'application/json'
+                //         },
+                //         body: formData
+                //     })
+                //         .then(res => res.json())
+                //         .then(data => {
+                //             if (data.html) {
+                //                 const parentId = form.querySelector('input[name="parent_id"]').value;
+
+                //                 if (parentId) {
+                //                     // Nếu là phản hồi
+                //                     const repliesContainer = document.querySelector('#replies-' + parentId);
+                //                     if (repliesContainer) {
+                //                         repliesContainer.insertAdjacentHTML('beforeend', data.html);
+                //                     }
+                //                     form.reset();
+                //                     form.parentElement.style.display = 'none';
+                //                 } else {
+                //                     // Nếu là bình luận gốc
+                //                     const commentList = document.querySelector('#comment-list');
+                //                     if (commentList) {
+                //                         commentList.insertAdjacentHTML('beforeend', data.html);
+                //                     }
+                //                     form.reset();
+                //                 }
+
+                //                 //  Luôn tăng số lượng bình luận (cả bình luận và phản hồi)
+                //                 const countEl = document.getElementById('comment-count');
+                //                 if (countEl) {
+                //                     const current = parseInt(countEl.textContent);
+                //                     countEl.textContent = current + 1;
+                //                 }
+                //             }
+                //         })
+                //         .catch(error => {
+                //             console.error('Lỗi gửi bình luận:', error);
+                //         });
+                // }
                 if (e.target.matches('.reply-submit-form')) {
                     e.preventDefault();
                     const form = e.target;
@@ -107,26 +154,37 @@
                         .then(res => res.json())
                         .then(data => {
                             if (data.html) {
-                                const parentId = form.querySelector('input[name="parent_id"]').value;
+                                const parentId = data.parent_id;
 
                                 if (parentId) {
                                     // Nếu là phản hồi
-                                    const repliesContainer = document.querySelector('#replies-' + parentId);
+                                    const repliesContainer = document.getElementById('replies-' + parentId);
+                                    const toggleBtn = document.querySelector('[data-target="replies-' + parentId + '"].toggle-replies');
+
                                     if (repliesContainer) {
                                         repliesContainer.insertAdjacentHTML('beforeend', data.html);
+                                        repliesContainer.classList.remove('d-none');
+                                        repliesContainer.style.display = 'block';
                                     }
+
+                                    if (toggleBtn && data.reply_count !== null) {
+                                        toggleBtn.textContent = 'Ẩn phản hồi';
+                                        toggleBtn.classList.remove('d-none');
+                                    }
+
+                                    // Reset form & ẩn
                                     form.reset();
                                     form.parentElement.style.display = 'none';
                                 } else {
                                     // Nếu là bình luận gốc
-                                    const commentList = document.querySelector('#comment-list');
+                                    const commentList = document.getElementById('comment-list');
                                     if (commentList) {
                                         commentList.insertAdjacentHTML('beforeend', data.html);
                                     }
                                     form.reset();
                                 }
 
-                                //  Luôn tăng số lượng bình luận (cả bình luận và phản hồi)
+                                // Tăng số bình luận
                                 const countEl = document.getElementById('comment-count');
                                 if (countEl) {
                                     const current = parseInt(countEl.textContent);
@@ -138,6 +196,7 @@
                             console.error('Lỗi gửi bình luận:', error);
                         });
                 }
+
             });
 
 
@@ -196,20 +255,26 @@
                 }
 
                 if (e.target.matches('.toggle-replies')) {
-                    const container = document.getElementById(e.target.dataset.target);
+                    const targetId = e.target.dataset.target;
+                    const container = document.getElementById(targetId);
                     if (container) {
-                        if (container.style.display === 'none' || container.classList.contains('d-none')) {
-                            container.style.display = 'block';
+                        const isHidden = container.classList.contains('d-none') || container.style.display === 'none';
+
+                        if (isHidden) {
                             container.classList.remove('d-none');
+                            container.style.display = 'block';
                             e.target.textContent = 'Ẩn phản hồi';
                         } else {
-                            container.style.display = 'none';
                             container.classList.add('d-none');
-                            const count = container.children.length;
-                            e.target.textContent = count + ' phản hồi';
+                            container.style.display = 'none';
+
+                            // Tính lại số phản hồi (chỉ đếm phần tử có id="comment-xxx")
+                            const replyCount = container.querySelectorAll('[id^="comment-"]').length;
+                            e.target.textContent = 'Hiện ' + replyCount + ' phản hồi';
                         }
                     }
                 }
+
             });
 
         });
