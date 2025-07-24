@@ -12,33 +12,64 @@
         <div>{!! $post->content !!}</div>
 
         <hr>
+        @guest
+            <div class="alert alert-warning d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>
+                    <a href="{{ route('login') }}">Đăng nhập</a> để thích và bình luận bài viết.
+                </span>
+            </div>
+        @endguest
+
 
         {{-- Reaction Section --}}
         <div class="mb-4 d-flex gap-2">
-            @if(Auth::check())
+            {{-- @if(Auth::check())
+            <form method="POST" action="{{ route('posts.react', [$post, 'like']) }}" class="react-form" data-type="like">
+                @csrf
+                <button type="submit" class="btn btn-success">
+                    Like (<span id="like-count">{{ $post->likes()->count() }}</span>)
+                </button>
+            </form>
+
+            <form method="POST" action="{{ route('posts.react', [$post, 'dislike']) }}" class="react-form"
+                data-type="dislike">
+                @csrf
+                <button type="submit" class="btn btn-danger">
+                    Dislike (<span id="dislike-count">{{ $post->dislikes()->count() }}</span>)
+                </button>
+            </form>
+            @else
+            <a href="{{ route('login') }}" class="btn btn-success">
+                Like (<span id="like-count">{{ $post->likes()->count() }}</span>)
+            </a>
+            <a href="{{ route('login') }}" class="btn btn-danger">
+                Dislike (<span id="dislike-count">{{ $post->dislikes()->count() }}</span>)
+            </a>
+            @endif --}}
+            @auth
                 <form method="POST" action="{{ route('posts.react', [$post, 'like']) }}" class="react-form" data-type="like">
                     @csrf
-                    <button type="submit" class="btn btn-success">
-                        Like (<span id="like-count">{{ $post->likes()->count() }}</span>)
+                    <button type="submit" class="btn btn-outline-success d-flex align-items-center gap-1 react-btn"
+                        data-button="like">
+                        <i class="bi bi-hand-thumbs-up"></i>
+                        <span id="like-count">{{ $post->likes()->count() }}</span>
                     </button>
                 </form>
 
                 <form method="POST" action="{{ route('posts.react', [$post, 'dislike']) }}" class="react-form"
                     data-type="dislike">
                     @csrf
-                    <button type="submit" class="btn btn-danger">
-                        Dislike (<span id="dislike-count">{{ $post->dislikes()->count() }}</span>)
+                    <button type="submit" class="btn btn-outline-danger d-flex align-items-center gap-1 react-btn"
+                        data-button="dislike">
+                        <i class="bi bi-hand-thumbs-down"></i>
+                        <span id="dislike-count">{{ $post->dislikes()->count() }}</span>
                     </button>
                 </form>
-            @else
-                <a href="{{ route('login') }}" class="btn btn-success">
-                    Like (<span id="like-count">{{ $post->likes()->count() }}</span>)
-                </a>
-                <a href="{{ route('login') }}" class="btn btn-danger">
-                    Dislike (<span id="dislike-count">{{ $post->dislikes()->count() }}</span>)
-                </a>
-            @endif
+
+            @endauth
         </div>
+
 
         {{-- Comment Section --}}
         <h4>Bình luận (<span id="comment-count">{{ $post->comments->count() }}</span>)</h4>
@@ -82,12 +113,43 @@
                     })
                         .then(res => res.json())
                         .then(data => {
+                            // Cập nhật số lượng
                             document.getElementById('like-count').textContent = data.like_count;
                             document.getElementById('dislike-count').textContent = data.dislike_count;
+
+                            // Nút và icon
+                            const likeBtn = document.querySelector('[data-button="like"]');
+                            const dislikeBtn = document.querySelector('[data-button="dislike"]');
+                            const likeIcon = likeBtn.querySelector('i');
+                            const dislikeIcon = dislikeBtn.querySelector('i');
+
+                            // Reset tất cả
+                            likeBtn.classList.remove('btn-success');
+                            likeBtn.classList.add('btn-outline-success');
+                            likeIcon.className = 'bi bi-hand-thumbs-up';
+
+                            dislikeBtn.classList.remove('btn-danger');
+                            dislikeBtn.classList.add('btn-outline-danger');
+                            dislikeIcon.className = 'bi bi-hand-thumbs-down';
+
+                            // Apply trạng thái mới
+                            if (data.current_reaction === 'like') {
+                                likeBtn.classList.remove('btn-outline-success');
+                                likeBtn.classList.add('btn-success');
+                                likeIcon.className = 'bi bi-hand-thumbs-up-fill';
+                            }
+
+                            if (data.current_reaction === 'dislike') {
+                                dislikeBtn.classList.remove('btn-outline-danger');
+                                dislikeBtn.classList.add('btn-danger');
+                                dislikeIcon.className = 'bi bi-hand-thumbs-down-fill';
+                            }
                         })
                         .catch(err => console.error('Lỗi phản hồi:', err));
                 });
             });
+
+
 
             // Gửi bình luận / phản hồi
             document.addEventListener('submit', function (e) {

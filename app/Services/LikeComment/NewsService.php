@@ -10,8 +10,38 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+
 class NewsService
 {
+    // public function react(array $data): array
+    // {
+    //     $user = Auth::user();
+    //     $post = $data['post'];
+    //     $isLike = $data['type'] === 'like';
+
+    //     $reaction = PostLike::where('user_id', $user->id)
+    //         ->where('post_id', $post->id)
+    //         ->first();
+
+    //     if ($reaction) {
+    //         if ($reaction->type === $isLike) {
+    //             $reaction->delete();
+    //         } else {
+    //             $reaction->update(['type' => $isLike]);
+    //         }
+    //     } else {
+    //         PostLike::create([
+    //             'user_id' => $user->id,
+    //             'post_id' => $post->id,
+    //             'type' => $isLike,
+    //         ]);
+    //     }
+
+    //     return [
+    //         'like_count' => $post->likes()->count(),
+    //         'dislike_count' => $post->dislikes()->count(),
+    //     ];
+    // }
     public function react(array $data): array
     {
         $user = Auth::user();
@@ -22,25 +52,34 @@ class NewsService
             ->where('post_id', $post->id)
             ->first();
 
+        $currentReaction = null;
+
         if ($reaction) {
             if ($reaction->type === $isLike) {
+                // Nếu đã like/dislike rồi bấm lại → huỷ
                 $reaction->delete();
             } else {
+                // Chuyển đổi trạng thái
                 $reaction->update(['type' => $isLike]);
+                $currentReaction = $isLike ? 'like' : 'dislike';
             }
         } else {
+            // Chưa có phản ứng → tạo mới
             PostLike::create([
                 'user_id' => $user->id,
                 'post_id' => $post->id,
                 'type' => $isLike,
             ]);
+            $currentReaction = $isLike ? 'like' : 'dislike';
         }
 
         return [
             'like_count' => $post->likes()->count(),
             'dislike_count' => $post->dislikes()->count(),
+            'current_reaction' => $currentReaction, 
         ];
     }
+
 
     public function addComment(array $data): PostComment
     {
