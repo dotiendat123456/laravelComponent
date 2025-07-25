@@ -84,30 +84,35 @@
                 lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
 
                 // Cấu hình Ajax gửi lên server
-                ajax: function (data, callback) {
-                    const page = (data.start / data.length) + 1; // Tính toán page từ start và length
+                // ajax: function (data, callback) {
+                //     const page = (data.start / data.length) + 1; // Tính toán page từ start và length
 
-                    // Gửi request tới route posts.data
-                    $.get(@json(route('posts.index')), {
-                        page: page, // Laravel cần param này để phân trang
-                        length: data.length, // Số lượng mỗi trang
-                        draw: data.draw,     // Dùng để đồng bộ với client
-                        search: data.search.value, // Tìm kiếm từ DataTables (nếu có)
-                        order: data.order,   // Sắp xếp cột
-                        columns: data.columns, // Cột được gửi lên
-                        title: $('#filterTitle').val(), // Lọc tiêu đề
-                        status: $('#filterStatus').val() // Lọc trạng thái
-                    }, function (response) {
-                        // console.log('Dữ liệu từ PostResource:', response.data);
-                        // Callback để DataTable hiển thị dữ liệu
-                        callback({
-                            draw: response.draw,
-                            recordsTotal: response.recordsTotal, // Tổng số bản ghi
-                            recordsFiltered: response.recordsFiltered, // Số bản ghi sau khi lọc
-                            data: response.data // Dữ liệu trả về
-                        });
-                    });
-                },
+                //     // Gửi request tới route posts.data
+                //     $.get(@json(route('posts.index')), {
+                //         page: page, // Laravel cần param này để phân trang
+                //         length: data.length, // Số lượng mỗi trang
+                //         draw: data.draw,     // Dùng để đồng bộ với client
+                //         search: data.search.value, // Tìm kiếm từ DataTables (nếu có)
+                //         order: data.order,   // Sắp xếp cột
+                //         columns: data.columns, // Cột được gửi lên
+                //         title: $('#filterTitle').val(), // Lọc tiêu đề
+                //         status: $('#filterStatus').val() // Lọc trạng thái
+                //     }, function (response) {
+                //         // console.log('Dữ liệu từ PostResource:', response.data);
+                //         // Callback để DataTable hiển thị dữ liệu
+                //         callback({
+                //             draw: response.draw,
+                //             recordsTotal: response.recordsTotal, // Tổng số bản ghi
+                //             recordsFiltered: response.recordsFiltered, // Số bản ghi sau khi lọc
+                //             data: response.data // Dữ liệu trả về
+                //         });
+                //     });
+                // },
+                <x-datatable.ajax :url="route('posts.index')">
+                    params['title'] = $('#filterTitle').val();
+                    params['status'] = $('#filterStatus').val();
+                </x-datatable.ajax>
+
 
                 // Định nghĩa các cột hiển thị
                 columns: [
@@ -152,21 +157,8 @@
                 ],
 
                 // Cấu hình ngôn ngữ tiếng Việt
-                language: {
-                    "emptyTable": "Không có bài viết nào",
-                    "search": "Tìm kiếm:",
-                    "zeroRecords": "Không tìm thấy kết quả phù hợp",
-                    "lengthMenu": "Hiển thị _MENU_ mục mỗi trang",
-                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                    "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                    "infoFiltered": "(được lọc từ tổng số _MAX_ mục)",
-                    "paginate": {
-                        "first": "Đầu tiên",
-                        "previous": "Trước",
-                        "next": "Sau",
-                        "last": "Cuối cùng"
-                    }
-                }
+                // Tái sử dụng language component
+            @include('components.datatable.language')
             });
 
             // Khi load dữ liệu xong, kiểm tra để ẩn/hiện nút Xóa tất cả

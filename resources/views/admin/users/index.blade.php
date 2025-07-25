@@ -100,31 +100,36 @@
                 pageLength: 5,
                 lengthMenu: [[1, 3, 5, 10, 15], [1, 3, 5, 10, 15]],
                 order: [0, 'desc'],
-                ajax: function (data, callback) {
-                    const page = (data.start / data.length) + 1; // Tính toán page từ start và length
+                // ajax: function (data, callback) {
+                //     const page = (data.start / data.length) + 1; // Tính toán page từ start và length
 
-                    // Gửi request tới route posts.data
-                    $.get(@json(route('admin.users.index')), {
-                        page: page, // Laravel cần param này để phân trang
-                        length: data.length, // Số lượng mỗi trang
-                        draw: data.draw,     // Dùng để đồng bộ với client
-                        search: data.search.value, // Tìm kiếm từ DataTables (nếu có)
-                        order: data.order,   // Sắp xếp cột
-                        columns: data.columns, // Cột được gửi lên
-                        name: $('#filterName').val(), // Lọc tiêu đề
-                        email: $('#filterEmail').val(), // Lọc Email
-                        status: $('#filterStatus').val(), // Lọc Status
-                    }, function (response) {
-                        // Callback để DataTable hiển thị dữ liệu
-                        console.log(response.data);
-                        callback({
-                            draw: response.draw,
-                            recordsTotal: response.recordsTotal, // Tổng số bản ghi
-                            recordsFiltered: response.recordsFiltered, // Số bản ghi sau khi lọc
-                            data: response.data // Dữ liệu trả về
-                        });
-                    });
-                },
+                //     // Gửi request tới route posts.data
+                //     $.get(@json(route('admin.users.index')), {
+                //         page: page, // Laravel cần param này để phân trang
+                //         length: data.length, // Số lượng mỗi trang
+                //         draw: data.draw,     // Dùng để đồng bộ với client
+                //         search: data.search.value, // Tìm kiếm từ DataTables (nếu có)
+                //         order: data.order,   // Sắp xếp cột
+                //         columns: data.columns, // Cột được gửi lên
+                //         name: $('#filterName').val(), // Lọc tiêu đề
+                //         email: $('#filterEmail').val(), // Lọc Email
+                //         status: $('#filterStatus').val(), // Lọc Status
+                //     }, function (response) {
+                //         // Callback để DataTable hiển thị dữ liệu
+                //         console.log(response.data);
+                //         callback({
+                //             draw: response.draw,
+                //             recordsTotal: response.recordsTotal, // Tổng số bản ghi
+                //             recordsFiltered: response.recordsFiltered, // Số bản ghi sau khi lọc
+                //             data: response.data // Dữ liệu trả về
+                //         });
+                //     });
+                // },
+                <x-datatable.ajax :url="route('admin.users.index')">
+                    params['name'] = $('#filterName').val();
+                    params['email'] = $('#filterEmail').val();
+                    params['status'] = $('#filterStatus').val();
+                </x-datatable.ajax>
 
                 columns: [
                     { // STT
@@ -196,21 +201,8 @@
                     }
                 ],
 
-                language: {
-                    "emptyTable": "Không có bài viết nào",
-                    "search": "Tìm kiếm:",
-                    "zeroRecords": "Không tìm thấy kết quả phù hợp",
-                    "lengthMenu": "Hiển thị _MENU_ mục mỗi trang",
-                    "info": "Hiển thị _START_ đến _END_ của _TOTAL_ mục",
-                    "infoEmpty": "Hiển thị 0 đến 0 của 0 mục",
-                    "infoFiltered": "(được lọc từ tổng số _MAX_ mục)",
-                    "paginate": {
-                        "first": "Đầu tiên",
-                        "previous": "Trước",
-                        "next": "Sau",
-                        "last": "Cuối cùng"
-                    }
-                }
+                // Tái sử dụng language component
+                @include('components.datatable.language')
             });
 
             $('#searchForm').on('submit', function (e) {
