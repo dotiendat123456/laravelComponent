@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ReactionType;
 use Illuminate\Database\Eloquent\Model;
 
 // class PostLike extends Model
@@ -39,8 +40,9 @@ class PostLike extends Model
     protected $fillable = ['user_id', 'likeable_id', 'likeable_type', 'type'];
 
     protected $casts = [
-        'type' => 'boolean',
+        'type' => ReactionType::class,
     ];
+   
 
     public function user()
     {

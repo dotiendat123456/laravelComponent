@@ -2,64 +2,53 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ReactionType;
 use App\Models\PostLike;
 use App\Models\Post;
-use App\Services\LikeComment\NewsService;
+use App\Services\Like\LikeService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class PostLikeController extends Controller
 {
-    // public function react(Post $post, $type)
+    protected $likeService;
+
+    public function __construct(LikeService $likeService)
+    {
+        $this->likeService = $likeService;
+    }
+
+    // public function react(Request $request, Post $post,  $type)
     // {
-    //     $user = Auth::user();
-    //     $isLike = $type === 'like';
+    //     $counts = $this->likeService->react([
+    //         'post' => $post,
+    //         'type' => $type,
+    //     ]);
 
-    //     $reaction = PostLike::where('user_id', $user->id)
-    //         ->where('post_id', $post->id)
-    //         ->first();
-
-    //     if ($reaction) {
-    //         if ($reaction->type === $isLike) {
-    //             $reaction->delete();
-    //         } else {
-    //             $reaction->update(['type' => $isLike]);
-    //         }
-    //     } else {
-    //         PostLike::create([
-    //             'user_id' => $user->id,
-    //             'post_id' => $post->id,
-    //             'type' => $isLike,
-    //         ]);
-    //     }
-
-    //     if (request()->expectsJson()) {
-    //         return response()->json([
-    //             'like_count' => $post->likes()->count(),
-    //             'dislike_count' => $post->dislikes()->count(),
-    //         ]);
+    //     if ($request->expectsJson()) {
+    //         return response()->json($counts);
     //     }
 
     //     return back()->with('success', ucfirst($type) . ' thành công');
     // }
-    protected $newsService;
 
-    public function __construct(NewsService $newsService)
+    public function react(Request $request, Post $post, $type)
     {
-        $this->newsService = $newsService;
-    }
+        try {
+            $reactionType = ReactionType::from((int) $type);
+        } catch (\ValueError $e) {
+            abort(400, 'Loại phản hồi không hợp lệ');
+        }
 
-    public function react(Request $request, Post $post, string $type)
-    {
-        $counts = $this->newsService->react([
+        $counts = $this->likeService->react([
             'post' => $post,
-            'type' => $type,
+            'type' => $reactionType,
         ]);
 
         if ($request->expectsJson()) {
             return response()->json($counts);
         }
 
-        return back()->with('success', ucfirst($type) . ' thành công');
+        return back()->with('success', $reactionType->label() . ' thành công');
     }
 }

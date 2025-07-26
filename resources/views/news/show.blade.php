@@ -24,37 +24,18 @@
 
         {{-- Reaction Section --}}
         <div class="mb-4 d-flex gap-2">
-            {{-- @if(Auth::check())
-            <form method="POST" action="{{ route('posts.react', [$post, 'like']) }}" class="react-form" data-type="like">
-                @csrf
-                <button type="submit" class="btn btn-success">
-                    Like (<span id="like-count">{{ $post->likes()->count() }}</span>)
-                </button>
-            </form>
-
-            <form method="POST" action="{{ route('posts.react', [$post, 'dislike']) }}" class="react-form"
-                data-type="dislike">
-                @csrf
-                <button type="submit" class="btn btn-danger">
-                    Dislike (<span id="dislike-count">{{ $post->dislikes()->count() }}</span>)
-                </button>
-            </form>
-            @else
-            <a href="{{ route('login') }}" class="btn btn-success">
-                Like (<span id="like-count">{{ $post->likes()->count() }}</span>)
-            </a>
-            <a href="{{ route('login') }}" class="btn btn-danger">
-                Dislike (<span id="dislike-count">{{ $post->dislikes()->count() }}</span>)
-            </a>
-            @endif --}}
             @auth
                 @php
+                    // $userReaction = optional($post->userReaction);
+                    // $isLiked = $userReaction->type === true;
+                    // $isDisliked = $userReaction->type === false;
                     $userReaction = optional($post->userReaction);
-                    $isLiked = $userReaction->type === true;
-                    $isDisliked = $userReaction->type === false;
+                    $isLiked = $userReaction->type?->value === \App\Enums\ReactionType::LIKE->value;
+                    $isDisliked = $userReaction->type?->value === \App\Enums\ReactionType::DISLIKE->value;
                 @endphp
 
-                <form method="POST" action="{{ route('posts.react', [$post, 'like']) }}" class="react-form" data-type="like">
+                <form method="POST" action="{{ route('posts.react', [$post, \App\Enums\ReactionType::LIKE->value]) }}"
+                    class="react-form" data-type="like">
                     @csrf
                     <button type="submit"
                         class="btn {{ $isLiked ? 'btn-success' : 'btn-outline-success' }} d-flex align-items-center gap-1 react-btn"
@@ -64,8 +45,8 @@
                     </button>
                 </form>
 
-                <form method="POST" action="{{ route('posts.react', [$post, 'dislike']) }}" class="react-form"
-                    data-type="dislike">
+                <form method="POST" action="{{ route('posts.react', [$post, \App\Enums\ReactionType::DISLIKE->value]) }}"
+                    class="react-form" data-type="dislike">
                     @csrf
                     <button type="submit"
                         class="btn {{ $isDisliked ? 'btn-danger' : 'btn-outline-danger' }} d-flex align-items-center gap-1 react-btn"
@@ -161,53 +142,6 @@
 
             // Gửi bình luận / phản hồi
             document.addEventListener('submit', function (e) {
-                // if (e.target.matches('.reply-submit-form')) {
-                //     e.preventDefault();
-                //     const form = e.target;
-                //     const formData = new FormData(form);
-
-                //     fetch(form.action, {
-                //         method: 'POST',
-                //         headers: {
-                //             'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                //             'Accept': 'application/json'
-                //         },
-                //         body: formData
-                //     })
-                //         .then(res => res.json())
-                //         .then(data => {
-                //             if (data.html) {
-                //                 const parentId = form.querySelector('input[name="parent_id"]').value;
-
-                //                 if (parentId) {
-                //                     // Nếu là phản hồi
-                //                     const repliesContainer = document.querySelector('#replies-' + parentId);
-                //                     if (repliesContainer) {
-                //                         repliesContainer.insertAdjacentHTML('beforeend', data.html);
-                //                     }
-                //                     form.reset();
-                //                     form.parentElement.style.display = 'none';
-                //                 } else {
-                //                     // Nếu là bình luận gốc
-                //                     const commentList = document.querySelector('#comment-list');
-                //                     if (commentList) {
-                //                         commentList.insertAdjacentHTML('beforeend', data.html);
-                //                     }
-                //                     form.reset();
-                //                 }
-
-                //                 //  Luôn tăng số lượng bình luận (cả bình luận và phản hồi)
-                //                 const countEl = document.getElementById('comment-count');
-                //                 if (countEl) {
-                //                     const current = parseInt(countEl.textContent);
-                //                     countEl.textContent = current + 1;
-                //                 }
-                //             }
-                //         })
-                //         .catch(error => {
-                //             console.error('Lỗi gửi bình luận:', error);
-                //         });
-                // }
                 if (e.target.matches('.reply-submit-form')) {
                     e.preventDefault();
                     const form = e.target;

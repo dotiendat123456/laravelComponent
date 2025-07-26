@@ -130,7 +130,7 @@ Route::middleware('guest')->group(function () {
 Route::get('/news', [UserPostController::class, 'publicIndex'])->name('news.index');
 Route::get('/news/{post:slug}', [UserPostController::class, 'publicShow'])->name('news.show');
 Route::middleware('auth')->group(function () {
-    Route::post('/posts/{post}/react/{type}', [PostLikeController::class, 'react'])->name('posts.react'); // ✅ Tốt
-    Route::post('/posts/{post}/comments', [PostCommentController::class, 'store'])->name('posts.comments.store'); // ✅ OK
-    Route::delete('/comments/{comment}', [PostCommentController::class, 'destroy'])->name('posts.comments.destroy'); // ⚠️ Cần sửa nhẹ
+    Route::post('/posts/{post}/react/{type}', [PostLikeController::class, 'react'])->name('posts.react');
+    Route::post('/posts/{post}/comments', [PostCommentController::class, 'store'])->name('posts.comments.store');
+    Route::delete('/comments/{comment}', [PostCommentController::class, 'destroy'])->name('posts.comments.destroy');
 });
