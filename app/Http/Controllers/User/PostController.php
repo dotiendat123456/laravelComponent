@@ -187,10 +187,11 @@ class PostController extends Controller
         if (! $this->postService->isPublicPost($post)) {
             abort(404);
         }
+        $comments=$post->comments->where('parent_id', null);
 
         $post->load(['comments.replies', 'userReaction'])
             ->loadCount(['likes', 'dislikes']);
 
-        return view('news.show', compact('post'));
+        return view('news.show', compact('post','comments'));
     }
 }
