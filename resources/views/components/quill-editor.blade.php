@@ -1,16 +1,11 @@
-@props([
-    'name'   => 'content',
-    'value'  => '',
-    'height' => 300,
-])
 <div class="mb-3">
-    <label class="form-label">{{ $label }} 
+    <label class="form-label">{{ $label }}
         @if ($required) <span class="text-danger">*</span> @endif
     </label>
 
     <div id="quill-{{ $name }}" style="height: {{ $height }}px;">
-        @if ($value) 
-        {!! old($name, $value) !!} 
+        @if ($value)
+            {!! old($name, $value) !!}
         @endif
     </div>
     <input type="hidden" name="{{ $name }}" id="{{ $name }}">
@@ -19,16 +14,6 @@
         <div class="text-danger">{{ $message }}</div>
     @enderror
 </div>
-{{-- Nội dung --}}
-            
-{{--                 
-                <x-quill-editor 
-                    name="content" 
-                    :value="old('content', $post->content)" 
-                    height="300" 
-                /> --}}
-
-                
 
 @once
     @push('styles')
