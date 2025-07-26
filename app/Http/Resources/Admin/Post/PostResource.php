@@ -23,7 +23,7 @@ class PostResource extends JsonResource
             'email' => $this->user,
             'status' => $this->status->label(),
             // 'created_at' => $this->created_at->format('d/m/Y'),
-            'created_at' => format_date($this->created_at),
+            'created_at' => format_date($this->created_at, 'date'),
             'slug' => $this->slug,
         ];
     }

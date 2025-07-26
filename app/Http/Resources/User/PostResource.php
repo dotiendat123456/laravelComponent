@@ -22,7 +22,7 @@ class PostResource extends JsonResource
             'title' => Str::limit($this->title, 50),
             'description' => Str::limit($this->description, 50),
             // 'publish_date' => $this->publish_date->format('d/m/Y'),
-            'publish_date' => format_date($this->publish_date),
+            'publish_date' => format_date($this->publish_date, 'date'),
             'status' => $this->status->label(),
         ];
     }
